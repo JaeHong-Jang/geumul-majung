@@ -1,0 +1,63 @@
+/* 판매 공장 정보, 별점 */
+.seller-stars { display: inline-flex; align-items: baseline; gap: 2px; color: var(--color-ink); white-space: nowrap; }
+.seller-stars > span { color: #F5A623; }
+.seller-stars b { font-weight: 800; }
+.seller-stars small { margin-left: 2px; font-size: .85em; color: var(--color-body); }
+.seller-stars.none { color: var(--color-body); font-size: 13px; }
+.seller-head { display: flex; gap: 14px; align-items: center; }
+.seller-head > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.seller-head h2 { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 0; font-size: 22px; }
+.seller-head small { font-size: 13px; color: var(--color-body); }
+.seller-avatar { flex: none; display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--color-surfaceSubtle); }
+.seller-intro { margin: 0; padding: 12px 14px; border-radius: 12px; background: var(--color-white); font-size: 14px; color: var(--color-ink); }
+.seller-info { display: flex; flex-direction: column; gap: 12px; padding: 14px; border-radius: var(--radius-card); background: var(--color-white); }
+.seller-info dl { display: flex; flex-direction: column; gap: 8px; margin: 0; }
+.seller-info dl > div { display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: 8px; font-size: 14px; }
+.seller-info dt { color: var(--color-body); }
+.seller-info dd { margin: 0; color: var(--color-ink); overflow-wrap: anywhere; }
+.seller-info dd a { color: var(--color-green); font-weight: 700; }
+.seller-map { height: 180px; border-radius: 12px; overflow: hidden; z-index: 0; }
+.seller-pin span { display: block; width: 22px; height: 22px; margin: 0 auto; border: 3px solid #fff; border-radius: 50% 50% 50% 0; background: var(--color-green); transform: rotate(-45deg); box-shadow: 0 2px 6px rgba(0,0,0,.3); }
+.seller-tabs { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--color-border); }
+.seller-tabs button { min-height: 44px; border: 0; border-bottom: 2px solid transparent; background: none; font: inherit; font-size: 15px; color: var(--color-body); cursor: pointer; }
+.seller-tabs button[aria-selected="true"] { border-bottom-color: var(--color-ink); color: var(--color-ink); font-weight: 800; }
+.seller-reviews { display: flex; flex-direction: column; gap: 8px; }
+.seller-reviews article { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: 12px; background: var(--color-white); }
+.seller-reviews header { display: flex; justify-content: space-between; align-items: center; }
+.seller-reviews small { font-size: 12px; color: var(--color-body); }
+.seller-reviews p { margin: 0; font-size: 14px; }
+.seller-review-stars { color: #F5A623; letter-spacing: 1px; }
+.seller-review-stars i { font-style: normal; color: var(--color-border); }
+
+/* 매물 상세(당근식): 판매자 줄, 아래 고정 막대(찜, 가격, 버튼) */
+.seller-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 0; border: 0; border-bottom: 1px solid var(--color-border); background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.seller-row .seller-avatar { width: 44px; height: 44px; }
+.seller-row > span:nth-child(2) { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.seller-row b { font-size: 15px; }
+.seller-row small { font-size: 13px; color: var(--color-body); }
+.seller-ask { flex: none; min-height: 34px; padding: 0 12px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-white); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.detail-bar { display: flex; align-items: center; gap: 12px; width: 100%; }
+.detail-heart { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border: 0; background: none; font-size: 24px; line-height: 1; color: var(--color-body); cursor: pointer; }
+.detail-heart[aria-pressed="true"] { color: #FF5A5F; }
+.detail-divider { flex: none; width: 1px; height: 36px; background: var(--color-border); }
+.detail-price { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.detail-price b { font-size: 18px; color: var(--color-ink); white-space: nowrap; }
+.detail-price small { font-size: 12px; color: var(--color-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.detail-actions { display: flex; gap: 6px; flex: none; }
+.detail-actions .app-button { width: auto; min-width: 0; padding: 0 14px; }
+.buyer-listing-seller { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--color-body); }
+.seller-row-wrap { margin-top: -4px; }
+.detail-ask { min-height: 44px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-white); font: inherit; font-weight: 700; color: var(--color-ink); cursor: pointer; }
+
+/* 상세 아래 막대: 두 줄(위 찜과 가격, 아래 버튼 두 개)로 나눠 겹치지 않게 */
+.detail-bar { flex-wrap: wrap; row-gap: 8px; }
+.detail-bar .detail-price { flex: 1 1 0; min-width: 0; }
+.detail-bar .detail-actions { flex: 1 1 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.detail-bar .detail-actions .app-button { width: 100%; height: 48px !important; min-height: 48px !important; padding: 0 8px; white-space: nowrap; }
+.detail-bar .detail-heart { width: 36px; height: 36px; }
+.detail-bar .detail-divider { height: 28px; }
+.detail-bar .detail-price b { font-size: 17px; }
+
+/* 후기 없는 별점: 회색 빈 별 */
+.seller-stars.none, .seller-stars.none > span, .seller-stars.none b { color: #B8BFBB !important; }
+.seller-stars.none b { font-weight: 700; }

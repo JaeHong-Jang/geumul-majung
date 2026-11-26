@@ -1,0 +1,95 @@
+@keyframes shell-pop {from {opacity:0;transform:scale(.6);} to {opacity:1;transform:none;}}
+@keyframes shell-flow {0%,100% {opacity:.25;} 50% {opacity:1;}}
+
+/* 밀어서 실행 */
+.shell-slide.shell-slide {position:relative;display:flex;align-items:center;width:100%;height:56px;min-height:56px;padding:0 16px 0 64px;border-radius:999px;background:var(--color-white);color:var(--color-ink);font:700 15px/1 var(--font-app);overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:grab;}
+.shell-slide.is-dragging {cursor:grabbing;}
+.shell-slide-fill {position:absolute;inset:0 auto 0 0;width:calc(var(--slide-x) + 56px);background:var(--color-mint);border-radius:inherit;}
+.shell-slide-knob {position:absolute;left:4px;top:4px;width:48px;height:48px;border-radius:50%;background:var(--color-brand);color:var(--color-onBrand);display:grid;place-items:center;font-size:24px;transform:translateX(var(--slide-x));transition:transform .35s cubic-bezier(.34,1.56,.64,1);}
+.shell-slide.is-dragging .shell-slide-knob {transition:none;}
+.shell-slide-label {position:relative;flex:1;text-align:center;}
+.shell-slide-arrows {position:relative;display:flex;font-size:18px;color:var(--color-green);}
+.shell-slide-arrows i {font-style:normal;animation:shell-flow 1.2s infinite;}
+.shell-slide-arrows i:nth-child(2) {animation-delay:.2s;}
+.shell-slide-arrows i:nth-child(3) {animation-delay:.4s;}
+
+/* AI 제안 */
+.shell-ai {background:var(--color-white);border:1px solid var(--color-border);border-radius:var(--radius-card);box-shadow:var(--shadow-card);padding:16px;animation:shell-up .3s var(--ease-out) both .15s;}
+.shell-ai-head {display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.shell-ai-head h2 {display:flex;align-items:center;gap:6px;font-size:18px;font-weight:700;}
+.shell-ai-head button {min-height:44px;color:var(--color-green);font-size:14px;font-weight:700;}
+.shell-ai ul {list-style:none;margin:0;padding:0;display:flex;flex-direction:column;}
+.shell-ai li {cursor:pointer;display:grid;grid-template-columns:44px minmax(0,1fr) 40px 40px;align-items:center;gap:8px;padding:10px 0;max-height:96px;border-top:1px solid var(--color-border);animation:shell-up .3s var(--ease-out) both calc(.2s + var(--i) * 40ms);transition:transform .24s var(--ease-out),opacity .24s,max-height .24s,padding .24s;}
+.shell-ai li:first-child {border-top:0;}
+.shell-ai li.is-leaving {transform:translateX(-40%);opacity:0;max-height:0;padding:0;}
+.shell-ai-thumb {width:44px;height:44px;border-radius:50%;background:var(--color-mint);display:grid;place-items:center;color:var(--color-green);}
+.shell-ai-thumb img {width:24px;height:24px;}
+.shell-ai-text {min-width:0;display:flex;flex-direction:column;gap:2px;}
+.shell-ai-text b {font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.shell-ai-text small {font-weight:400;color:var(--color-body);font-size:13px;}
+.shell-ai-text > span {font-size:13px;color:var(--color-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.shell-ai.shell-ai li > button {width:40px;height:40px;min-height:40px;border-radius:50%;display:grid;place-items:center;font-size:16px;}
+.shell-ai.shell-ai .shell-ai-no {background:var(--color-surfaceSubtle);color:var(--color-body);}
+.shell-ai.shell-ai .shell-ai-yes {background:var(--color-brand);color:var(--color-onBrand);font-size:22px!important;}
+.shell-ai-empty {color:var(--color-body);font-size:14px;padding:8px 0;}
+
+/* 탭바 가운데 AI 버튼 */
+.shell-tabs .shell-fab.shell-fab {flex:none;width:52px;height:52px;min-height:52px;margin:-22px 4px 0;border-radius:50%;background:var(--color-brand);box-shadow:0 0 0 4px var(--color-white),0 6px 14px rgb(17 107 85 / 28%);gap:0;animation:shell-pop .4s cubic-bezier(.34,1.56,.64,1) both .3s;transition:transform .15s;}
+.shell-tabs .shell-fab:active {transform:scale(.94);}
+.shell-tabs .shell-fab img {width:22px;height:22px;filter:brightness(0) invert(1);}
+
+/* AI 도우미 화면 */
+.shell-assistant {display:flex;flex-direction:column;height:100%;background:var(--color-background);font-family:var(--font-app);color:var(--color-ink);}
+.shell-assistant > header {display:grid;grid-template-columns:44px 1fr 44px;align-items:center;padding:var(--screen-top-inset) 12px 8px;}
+.shell-assistant > header button {width:44px;height:44px;display:grid;place-items:center;}
+.shell-assistant > header h1 {text-align:center;font-size:17px;font-weight:700;}
+.shell-assistant-body {flex:1;overflow:auto;padding:12px 20px 20px;}
+.shell-assistant-avatar {display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:var(--color-white);box-shadow:var(--shadow-card);animation:shell-pop .4s cubic-bezier(.34,1.56,.64,1) both;}
+.shell-assistant-hi {margin-top:16px;font-size:15px;color:var(--color-body);}
+.shell-assistant h2 {margin:4px 0 20px;font-size:28px;font-weight:750;line-height:1.3;letter-spacing:-.065em;color:var(--color-title);}
+.shell-assistant h2 span {display:inline-block;animation:shell-up .35s var(--ease-out) both calc(var(--i) * 90ms);white-space:pre;}
+.shell-assistant-cards {display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.shell-assistant-cards button.shell-assistant-card {position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:stretch;gap:6px;min-height:168px;padding:60px 16px 16px;border-radius:var(--radius-card);text-align:left;animation:shell-up .35s var(--ease-out) both .35s;}
+.shell-assistant-cards button.mint {background:var(--color-mint);}
+.shell-assistant-cards button.peach {background:var(--color-peach);animation-delay:.42s;}
+.shell-assistant-cards i {position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;border:1px solid rgb(0 0 0 / 12%);display:grid;place-items:center;font-style:normal;}
+.shell-assistant-cards b {font-size:17px;line-height:1.3;}
+.shell-assistant-cards small {font-size:13px;color:var(--color-inkMuted);line-height:1.4;}
+.shell-assistant h3 {margin:24px 0 10px;font-size:16px;font-weight:700;animation:shell-up .35s var(--ease-out) both .5s;}
+.shell-assistant-chips {display:flex;flex-wrap:wrap;gap:8px;animation:shell-up .35s var(--ease-out) both .55s;}
+.shell-assistant-chips button {min-height:40px;padding:0 14px;border-radius:999px;background:var(--color-white);border:1px solid var(--color-border);font-size:14px;}
+.shell-assistant-input {display:flex;align-items:center;gap:8px;margin:0 16px calc(16px + env(safe-area-inset-bottom,0px));padding:6px 6px 6px 18px;border-radius:999px;background:var(--color-white);box-shadow:var(--shadow-card);animation:shell-up .35s var(--ease-out) both .6s;}
+.shell-assistant-input input {flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:15px;}
+.shell-assistant-input button {width:44px;height:44px;border-radius:50%;background:var(--color-brand);color:var(--color-onBrand);display:grid;place-items:center;}
+.shell-assistant-note {margin:-8px 20px 12px;font-size:13px;color:var(--color-body);text-align:center;}
+
+@media (prefers-reduced-motion: reduce) {
+ .shell-slide-knob,.shell-ai li,.shell-tabs .shell-fab {transition:none;}
+ .shell-ai,.shell-ai li,.shell-tabs .shell-fab,.shell-assistant *,.shell-slide-arrows i {animation:none!important;}
+}
+
+/* 대화 목록만 스크롤하고 입력 영역은 화면 아래에 유지합니다. */
+.shell-assistant {flex:1;min-height:0;min-width:0;overflow:hidden;}
+.shell-assistant > header,.shell-assistant-input {flex-shrink:0;}
+.shell-assistant-body {min-height:0;min-width:0;}
+.shell-assistant-messages {display:flex;flex-direction:column;gap:12px;min-width:0;}
+.shell-assistant-bubble {align-self:flex-start;max-width:92%;min-width:0;padding:12px 16px;border-radius:var(--radius-card);background:var(--color-white);border:1px solid var(--color-border);overflow-wrap:anywhere;white-space:pre-wrap;}
+.shell-assistant-bubble.user {align-self:flex-end;background:var(--color-brand);color:var(--color-onBrand);}
+.shell-assistant-bubble p {margin:4px 0;}
+.shell-assistant-answer {white-space:pre-line;}
+.shell-assistant-bubble small {font-size:12px;}
+.shell-assistant-input button {flex-shrink:0;}
+.shell-assistant-input button:disabled {opacity:.5;}
+.shell-assistant-bubble small {display:block;}
+.shell-assistant-facts {margin-top:8px;padding-top:8px;border-top:1px solid var(--color-border);}
+.shell-assistant-facts summary {cursor:pointer;min-height:32px;font-size:13px;font-weight:700;color:var(--color-brand);}
+
+.shell-assistant-fact + .shell-assistant-fact {margin-top:12px;padding-top:12px;border-top:1px solid var(--color-border);}
+.shell-assistant-fact b {display:block;line-height:1.5;}
+.shell-assistant-law {margin-top:8px;min-width:0;}
+.shell-assistant-law summary {cursor:pointer;min-height:32px;font-size:13px;font-weight:700;color:var(--color-brand);}
+.shell-assistant-law p {font-size:13px;line-height:1.6;color:var(--color-body);}
+.shell-assistant-legal-note {margin-top:12px;color:var(--color-body);}
+/* 가운데 AI 버튼은 늘 52px 정원(탭 버튼의 flex:1 규칙보다 우선) */
+.shell-tabs.shell-tabs.shell-tabs .shell-fab.shell-fab {flex:0 0 52px;width:52px;max-width:52px;height:52px;min-height:52px;padding:0;gap:0;}
+.shell-ai.shell-ai li > button svg { display: block; }

@@ -1,0 +1,177 @@
+/* 구매자 탐색: 초록 머리 위에 겹친 검색 카드(검색·분류·대표 품목) → 판매 중인 원료 목록 */
+.explore { display: flex; flex-direction: column; gap: 12px; }
+.explore-hero {
+  margin: calc(-1 * var(--screen-top-inset)) -20px 0;
+  padding: calc(var(--screen-top-inset) + 20px) 24px 24px;
+  color: var(--color-onBrand);
+  background: var(--color-brand);
+}
+.explore-hero small { opacity: 0.8; font-size: 14px; }
+.explore-hero h1 { margin: 6px 0 0; font-size: 26px; letter-spacing: -0.03em; }
+
+.search-card {
+  margin-top: 0;
+  background: var(--color-white);
+  border-radius: 20px;
+  padding: 14px;
+  box-shadow: 0 12px 32px rgba(23, 37, 30, 0.14);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.segmented {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--color-surfaceSubtle);
+}
+.segmented button {
+  flex: 1;
+  min-height: 36px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--color-body);
+  font: inherit;
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.segmented button[aria-selected="true"], .segmented button[aria-pressed="true"] {
+  background: var(--color-white);
+  color: var(--color-ink);
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgba(23, 37, 30, 0.12);
+}
+.search-cta {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 14px;
+  color: var(--color-onBrand);
+  background: var(--color-brand);
+  font: inherit;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+}
+.search-cta .ic { filter: brightness(0) invert(1); }
+.search-cta:disabled { opacity: 0.7; }
+
+.results-head { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; scroll-margin-top: 12px; }
+.results-head h2 { margin: 0; font-size: 18px; }
+.results-head h2 b { color: var(--color-green); }
+.chip-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-white);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.applied-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--color-surfaceSubtle);
+  font-size: 13px;
+  color: var(--color-inkMuted);
+}
+
+/* 시트 안 */
+.sheet-label { margin: 18px 0 8px; font-size: 15px; }
+.sheet-label small { color: var(--color-body); font-weight: 400; font-size: 12px; }
+.sheet-body > .sheet-label:first-child { margin-top: 0; }
+.option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.option-grid button, .pick-list button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-white);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.option-grid button { flex-direction: column; align-items: flex-start; gap: 0; }
+.option-grid small, .pick-list small { color: var(--color-body); font-size: 12px; }
+.option-grid button[aria-pressed="true"], .pick-list button[aria-pressed="true"] {
+  border-color: var(--color-green);
+  background: #EEF5F0;
+  box-shadow: inset 0 0 0 1px var(--color-green);
+}
+.pick-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.pick-list button > span { flex: 1; min-width: 0; }
+.pick-list button[aria-pressed="true"]::after { content: "✓"; color: var(--color-green); font-weight: 700; }
+.sheet-reset, .sheet-apply {
+  min-height: 50px;
+  border-radius: 12px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.sheet-reset { flex: none; padding: 0 18px; border: 1px solid var(--color-border); background: var(--color-white); }
+.sheet-apply { flex: 1; border: 0; color: var(--color-onBrand); background: var(--color-brand); }
+
+/* 대표 품목 */
+.material-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.material-grid button {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  min-height: 84px; padding: 8px 2px;
+  border: 1px solid var(--color-border); border-radius: 12px;
+  background: var(--color-white); font: inherit; color: inherit; cursor: pointer;
+}
+.material-grid button strong { font-size: 14px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.material-grid button small { font-size: 12px; color: var(--color-green); font-weight: 700; }
+.material-grid button.none small { color: var(--color-body); font-weight: 400; }
+.material-grid button[aria-pressed="true"] { border-color: var(--color-green); background: #EEF5F0; box-shadow: inset 0 0 0 1px var(--color-green); }
+.material-grid .buyer-listing-picture { border-radius: 10px; }
+
+.picked-card {
+  display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 4px 12px;
+  padding: 12px 14px; border-radius: 16px; background: var(--color-white);
+}
+.picked-card > div { display: flex; flex-direction: column; min-width: 0; }
+.picked-card strong { font-size: 24px; line-height: 1.15; }
+.picked-card small { font-size: 13px; color: var(--color-body); }
+.picked-card > span { font-size: 14px; font-weight: 700; color: var(--color-green); white-space: nowrap; }
+.picked-card .text-button { grid-column: 2 / 4; justify-self: end; font-size: 13px; }
+
+.results-tools { display: flex; align-items: center; gap: 6px; }
+.unit-switch { padding: 3px; }
+.unit-switch button { min-height: 30px; padding: 0 8px; font-size: 12px; }
+
+.want-empty { display: flex; flex-direction: column; gap: 8px; padding: 20px 16px; border-radius: 16px; background: var(--color-white); text-align: center; }
+.want-empty b { font-size: 17px; }
+.want-empty p { margin: 0 0 4px; font-size: 14px; color: var(--color-body); }
+.want-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 16px; border: 1px dashed var(--color-green); border-radius: 16px;
+  background: #EEF5F0; font: inherit; color: inherit; text-align: left; cursor: pointer;
+}
+.want-banner span { display: flex; flex-direction: column; gap: 2px; }
+.want-banner b { font-size: 15px; color: var(--color-ink); }
+.want-banner small { font-size: 13px; color: var(--color-body); }
+
+/* 좁은 화면(320px)에서도 제목과 단위·정렬 버튼이 글자 단위로 끊기지 않게 */
+.results-head { flex-wrap: wrap; gap: 8px; }
+.results-head h2, .chip-button, .unit-switch button { white-space: nowrap; }
+.results-tools { margin-left: auto; }
+.material-grid button strong { font-size: clamp(12px, 3.6vw, 14px); }

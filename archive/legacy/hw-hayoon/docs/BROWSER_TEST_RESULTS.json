@@ -1,0 +1,842 @@
+{
+  "date": "2026-11-05T01:34:50.244Z",
+  "base": "http://127.0.0.1:5173",
+  "browser": "Isolated headless Google Chrome, CDP via Node built-in WebSocket",
+  "checks": [
+    {
+      "name": "Fresh state shows all vehicle-compatible calls",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Skip link focuses main without changing route hash",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Korean IME composition preserves live input node and focus",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Korean composition end applies completed search",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Search matches shipper identity and destination",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Search with no match shows empty state",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Clear search restores compatible calls",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Category 추천 filters calls",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Category 급송 filters calls",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Category 독차 filters calls",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Category 묶음 filters calls",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Fare sort orders descending",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Nearby sort orders ascending empty distance",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Detailed fare and distance filters apply",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Dialog reset only changes draft controls",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Canceling filter reset preserves applied filters",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Reopening canceled filter restores applied values",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Applying draft reset restores compatible calls",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Fresh comparison preference defaults to 450 won per km",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Three comparison selections persist and expose pressed state",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Fourth comparison selection is refused without changing choices",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Comparison dialog presents exactly selected order identities",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Comparison 1 includes empty distance and correctly rounded driving cost",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Comparison 2 includes empty distance and correctly rounded driving cost",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Comparison 3 includes empty distance and correctly rounded driving cost",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Comparison distinguishes reference remainder from profit or confirmed fare",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Zero per-km cost is a valid assumption",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Zero per-km assumption preserves entire fare as reference remainder",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Maximum per-km cost is valid",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Negative after-cost reference amount stays negative and marked",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Invalid cost assumption \"-1\" fails native form validity",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Invalid cost assumption \"-1\" cannot change saved preference",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Invalid cost assumption \"1.5\" fails native form validity",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Invalid cost assumption \"1.5\" cannot change saved preference",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Invalid cost assumption \"\" fails native form validity",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Invalid cost assumption \"\" cannot change saved preference",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Invalid cost assumption \"10001\" fails native form validity",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Invalid cost assumption \"10001\" cannot change saved preference",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Comparison selections and custom cost persist after reload",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Persisted custom cost is restored in the comparison form",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Comparison cost controls remain reachable at 390px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Third comparison detail action remains reachable at 390px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Comparison cost controls remain reachable at 375px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Third comparison detail action remains reachable at 375px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Comparison detail opens matching resource and return action",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Returning from comparison detail retains selected orders and cost",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Removing all comparison orders shows a usable empty state",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Closing comparison after removals restores the header comparison opener",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Detail comparison action selects its order and opens the comparison",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Clear all comparison choices preserves the custom cost assumption",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Manual loading remains a separate review condition without capacity block",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Save toggles call state",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Saved route lists saved call only",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Saved call persists across reload",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Offline call detail blocks acceptance",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Offline blocked click leaves no trip",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Disabling vehicle filter reveals 7.5t call",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Incompatible 7.5t call cannot be accepted",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Overweight preflight blocks capacity while keeping permit review distinct",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Native modal opens with focus inside dialog",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Escape closes dialog and restores opener focus",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Resource passport reports source material and declared quantities",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Unknown passport information is expandable and remains unverified",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Compatible preflight separates capacity and handling checks from permit review",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Resource detail acceptance action remains reachable at 390px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Resource detail acceptance action remains reachable at 375px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Acceptance form requires condition confirmation",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Acceptance preflight is informational and preserves one required agreement",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Above-ceiling fare is invalid",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Invalid fare cannot create trip through form",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Zero fare is invalid",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "One won is a valid minimum fare",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Fractional fare fails integer step validity",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Negative fare is invalid",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Confirmed valid fare satisfies native form validity",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Accepting call 1 creates to-pickup trip",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Accepting a selected order removes only that comparison entry",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Active trip detail cannot re-add its accepted order to comparison",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Accepted trip records acceptance time without fabricating later events",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Active transport record shows actual progress and unmeasured resource status",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Active JSON download identifies demo and preserves unknown actual weight",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Active record download remains reachable at 390px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Active record download remains reachable at 375px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Pickup arrival advances to loading",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Pickup timestamp is recorded when loading begins",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Loading requires exactly 18 individual weight inputs",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Zero bag weight fails native validity",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Invalid bag data cannot advance transport",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "All 18 weights and confirmation validate",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Confirmed weights advance to in-transit",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Departure timestamp is recorded after all weights are confirmed",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Dropoff arrival advances to arrived",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Arrival timestamp is recorded at dropoff",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Physical arrival waits for driver confirmation before buyer inspection",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Pre-confirmation JSON remains arrived with no completed timestamp",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Final confirmation completes trip as inspection-pending",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Completed trip displays buyer inspection waiting state",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Completed trip detail and stale action cannot re-add its order to comparison",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Handoff shows 18 bags and inspection boundary",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Driver confirmation is recorded separately from buyer inspection",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Completed trip retains all recorded stage timestamps in sequence",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Completed record keeps buyer inspection waiting instead of driver approval",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Completed JSON exports exact weights and pending inspection status",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Completed record download remains reachable at 390px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Completed record download remains reachable at 375px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Inspection ledger filter shows completed call separately",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Pending ledger filter excludes inspection records",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Paid ledger filter shows paid records",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "CSV download includes inspection-pending trip",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "No document horizontal overflow on calls at 1440px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "No document horizontal overflow on trips at 1440px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Completed handoff action remains visible at 1440px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "No document horizontal overflow on earnings at 1440px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "No document horizontal overflow on saved at 1440px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "No document horizontal overflow on profile at 1440px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "No document horizontal overflow on calls at 768px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "No document horizontal overflow on trips at 768px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Completed handoff action remains visible at 768px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "No document horizontal overflow on earnings at 768px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "No document horizontal overflow on saved at 768px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "No document horizontal overflow on profile at 768px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "No document horizontal overflow on calls at 390px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "No document horizontal overflow on trips at 390px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Completed handoff action remains visible at 390px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "No document horizontal overflow on earnings at 390px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "No document horizontal overflow on saved at 390px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "No document horizontal overflow on profile at 390px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "No document horizontal overflow on calls at 375px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "No document horizontal overflow on trips at 375px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Completed handoff action remains visible at 375px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "No document horizontal overflow on earnings at 375px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "No document horizontal overflow on saved at 375px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "No document horizontal overflow on profile at 375px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Legacy record displays missing intermediate times without fabricating them",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Legacy JSON preserves unknown timestamps as null after reload",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Profile reset requires explicit confirmation",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Dismissing reset retains stored data",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Confirmed profile reset restores fresh demo state",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "First call shows route, fare, weight and detail action without scrolling at 375x667",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "All five menus are reachable at 375px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "First call shows route, fare, weight and detail action without scrolling at 390x844",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "All five menus are reachable at 390px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "First call shows route, fare, weight and detail action without scrolling at 768x1024",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "All five menus are reachable at 768px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "First call shows route, fare, weight and detail action without scrolling at 1440x900",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "All five menus are reachable at 1440px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Text on calls is at least 12px with 4.5:1 contrast at 390px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Text on trips is at least 12px with 4.5:1 contrast at 390px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Text on earnings is at least 12px with 4.5:1 contrast at 390px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Text on saved is at least 12px with 4.5:1 contrast at 390px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Text on profile is at least 12px with 4.5:1 contrast at 390px",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Offline banner explains what still works",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Offline accept is blocked with a reason and keeps the fare input",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Reconnected accept stores the real acceptance time",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "Offline banner hides after reconnecting",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "No browser exceptions",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "No console errors",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "No HTTP 404 or other failed responses",
+      "passed": true,
+      "details": true
+    },
+    {
+      "name": "No unexpected failed network requests",
+      "passed": true,
+      "details": true
+    }
+  ],
+  "screenshots": [
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-desktop.png",
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-mobile.png",
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-comparison-desktop.png",
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-comparison-390.png",
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-comparison-375.png",
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-saved.png",
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-resource-detail-390.png",
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-resource-detail-375.png",
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-call-detail.png",
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-active-record-390.png",
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-active-record-375.png",
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-trip-pickup.png",
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-bag-weights.png",
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-trip-completed.png",
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-completed-record-390.png",
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-completed-record-375.png",
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-calls-1440.png",
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-trips-1440.png",
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-earnings-1440.png",
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-saved-1440.png",
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-profile-1440.png",
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-calls-390.png",
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-trips-390.png",
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-earnings-390.png",
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-saved-390.png",
+    "/Users/leeseungbo/Desktop/부트캠프 사업/AI-Bootcamp/hw-hayoon/docs/screenshots/final-profile-390.png"
+  ],
+  "exceptions": [],
+  "consoleErrors": [],
+  "failedRequests": [],
+  "badResponses": [],
+  "summary": {
+    "passed": 159,
+    "failed": 0,
+    "screenshots": 26,
+    "exceptions": 0,
+    "consoleErrors": 0,
+    "httpErrors": 0
+  }
+}

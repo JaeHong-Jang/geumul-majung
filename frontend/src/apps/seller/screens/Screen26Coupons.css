@@ -1,0 +1,6 @@
+.coupon-caption {
+  width:100%;
+  font-size: var(--font-secondary);
+  line-height: 18px;
+  color: var(--c-muted);
+}

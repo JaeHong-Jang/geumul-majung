@@ -1,0 +1,80 @@
+/* 말로 입력 */
+.voice-input {
+  width: 100%;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.voice-input__btn {
+  width: 100%;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1.5px solid var(--color-green);
+  border-radius: var(--radius-card);
+  background: #fff;
+  color: var(--color-green);
+  font-size: 16px;
+  font-weight: 700;
+}
+.voice-input__btn.is-recording {
+  background: var(--color-green);
+  color: #fff;
+  animation: voice-rec 1.2s ease-in-out infinite;
+}
+.voice-input__btn:disabled {
+  opacity: 0.7;
+}
+.voice-input__hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 17px;
+  color: var(--color-hint);
+  text-align: center;
+}
+.voice-input__skip {
+  align-self: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  background: none;
+  color: var(--color-hint);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+}
+@keyframes voice-rec {
+  50% { box-shadow: 0 0 0 4px rgb(40 99 71 / 18%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .voice-input__btn.is-recording { animation: none; }
+}
+
+.voice-input__error {
+  margin: 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--color-priceUp);
+  text-align: center;
+}
+/* AI가 채운 칸 표시(사람이 고치면 뗀다) */
+.ai-tag {
+  margin-left: 6px;
+  padding: 0 6px;
+  border: 1px solid var(--color-green);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 16px;
+  color: var(--color-green);
+  vertical-align: 1px;
+}
+.ai-why {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 17px;
+  color: var(--color-hint);
+}

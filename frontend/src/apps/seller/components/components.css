@@ -1,0 +1,21 @@
+.vicon {
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.vicon__group,
+.vicon__bleed {
+  position: absolute;
+}
+.vicon__bleed img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+}
+
+
+.error-note, .ok-note {width:100%;font-size:14px;line-height:1.5;white-space:pre-line;}
+.error-note {color:var(--color-priceUp);}
+.ok-note {color:var(--color-green);}

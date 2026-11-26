@@ -1,0 +1,25 @@
+@import "../../../shared/theme.css";
+/* 피그마 '판매자' 화면에서 반복되는 값들 */
+:root {
+  --font: var(--font-app);
+
+  --c-bg: var(--color-background);          /* 화면 배경 */
+  --c-surface: var(--color-white);
+  --c-primary: var(--color-green);     /* 메인 초록 */
+  --c-text: var(--color-ink);        /* 기본 글자 */
+  --c-muted: var(--color-hint);       /* 입력 안내·보조 글자 */
+  --c-sub: var(--color-body);         /* 설명 글자 */
+  --c-border: var(--color-borderInput);      /* 입력칸·버튼·하단 영역 테두리 */
+  --c-mint: var(--color-surfaceSubtle);        /* 연한 초록 카드 */
+  --c-mint-2: var(--color-surfaceSubtle);      /* 안내 박스·배지 */
+  --c-sand: var(--color-surfaceGray);        /* 회색빛 카드 */
+  --c-yellow: var(--color-gold);      /* 혜택 배너 */
+  --c-accent: var(--color-priceUp);      /* 새 알림 점 */
+  --c-nav-border: var(--color-border);
+  --c-nav-off: var(--color-hint);    /* 하단 탭 미선택 글자 (홈 화면만 일부 var(--color-hint)) */
+
+  --r-sm: 12px;
+  --r-md: var(--radius-card);
+  --r-lg: var(--radius-hero);
+
+}

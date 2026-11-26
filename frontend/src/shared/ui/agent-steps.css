@@ -1,0 +1,107 @@
+.agent-steps {
+  width: 100%;
+  flex-shrink: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--color-borderInput);
+  border-radius: var(--radius-card);
+  background: #fff;
+}
+.agent-steps__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+.agent-steps__title small {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-hint);
+}
+.agent-steps__heard {
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f3f4f5;
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--color-ink);
+  word-break: keep-all;
+}
+.agent-steps__heard span {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-hint);
+}
+.agent-steps__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.agent-steps__list li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 8px;
+  padding: 0 0 10px;
+  animation: agent-step-in 0.28s ease-out both calc(var(--i) * 180ms);
+}
+.agent-steps__list li:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 9px;
+  top: 20px;
+  bottom: 0;
+  width: 2px;
+  background: var(--color-borderInput);
+}
+.agent-steps__no {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+  color: var(--color-green);
+}
+.agent-steps__list li.is-fail .agent-steps__no {
+  color: #b42318;
+}
+.agent-steps__list b {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--color-ink);
+}
+.agent-steps__list em {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0 6px;
+  border: 1px solid var(--color-green);
+  border-radius: 4px;
+  color: var(--color-green);
+}
+.agent-steps__list p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--color-hint);
+  word-break: keep-all;
+}
+.agent-steps__foot {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--color-hint);
+}
+@keyframes agent-step-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .agent-steps__list li { animation: none; }
+}

@@ -1,0 +1,54 @@
+/* 구매 요청: 입고지 하차 조건, 결제, 완료 화면 */
+/* 운송은 판매자가 맡는다는 안내 */
+.ship-note { display: flex; gap: 10px; align-items: flex-start; background: #EEF5F0 !important; border: 1px solid #CFE3D6; }
+.ship-note span { display: flex; flex-direction: column; gap: 2px; }
+.ship-note b { font-size: 15px; color: var(--color-ink); }
+.ship-note small { font-size: 13px; color: var(--color-body); }
+/* 하차 조건: 질문마다 번호 붙은 카드로 나눈다 */
+.dock-steps { display: flex; flex-direction: column; gap: 10px; }
+.dock-step { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: var(--radius-card); background: var(--color-white); border: 1px solid var(--color-border); }
+.dock-step h3 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 15px; color: var(--color-ink); }
+.dock-step h3 span { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--color-green); color: var(--color-onBrand); font-size: 12px; font-weight: 800; }
+.dock-choice { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.dock-choice button { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 64px; padding: 10px 12px 10px 34px;
+  border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-white); font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.dock-choice button::before { content: ""; position: absolute; left: 12px; top: 13px; width: 14px; height: 14px; border: 2px solid var(--color-borderStrong, #B9C2BD); border-radius: 50%; box-sizing: border-box; }
+.dock-choice button[aria-checked="true"] { border-color: var(--color-green); background: #EEF5F0; box-shadow: inset 0 0 0 1px var(--color-green); }
+.dock-choice button[aria-checked="true"]::before { border: 4px solid var(--color-green); }
+.dock-choice b { font-size: 15px; }
+.dock-choice small { font-size: 12px; color: var(--color-body); }
+.dock-sub { margin: 2px 0 0; font-size: 13px; color: var(--color-body); }
+.dock-equip { display: flex; flex-wrap: wrap; gap: 8px; }
+.dock-equip button { min-height: 40px; padding: 0 14px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-white); font: inherit; font-size: 14px; color: var(--color-body); cursor: pointer; }
+.dock-equip button[aria-pressed="true"] { border-color: var(--color-green); background: var(--color-green); color: var(--color-onBrand); font-weight: 700; }
+.dock-equip button[aria-pressed="true"]::before { content: "✓ "; }
+.dock-hint { margin: 0; font-size: 13px; color: var(--color-body); }
+.dock-hours { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.dock-hours button { min-height: 36px; padding: 0 12px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-white); font: inherit; font-size: 13px; cursor: pointer; }
+.dock-warn { display: flex; gap: 6px; align-items: flex-start; margin: 8px 0 0; padding: 10px 12px; border-radius: 10px; background: #FFF6E5; font-size: 13px; color: var(--color-ink); }
+.pay-card { display: flex; flex-direction: column; gap: 12px; }
+.pay-head { display: flex; gap: 10px; align-items: flex-start; }
+.pay-head span { display: flex; flex-direction: column; gap: 2px; }
+.pay-head b { font-size: 15px; }
+.pay-head small { font-size: 13px; color: var(--color-body); }
+.buyer-agree { margin: 4px 2px; }
+
+/* 완료 화면: 다음 단계를 가로로 */
+.next-row { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: var(--radius-card); background: var(--color-white); }
+.next-row > b { font-size: 15px; }
+.next-row ol { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; padding: 0; list-style: none; }
+.next-row li { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; color: var(--color-body); text-align: center; }
+.next-row li::before { content: ""; position: absolute; top: 13px; left: -50%; right: 50%; height: 2px; background: var(--color-border); }
+.next-row li:first-child::before { display: none; }
+.next-row li span { position: relative; z-index: 1; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--color-surfaceSubtle); font-weight: 700; color: var(--color-ink); }
+.next-row li.on { color: var(--color-green); font-weight: 700; }
+.next-row li.on span { background: var(--color-green); color: var(--color-onBrand); }
+.done-receipt-toggle { min-height: 44px; border: 1px solid var(--color-green); border-radius: 10px; background: var(--color-white); color: var(--color-green); font: inherit; font-weight: 700; cursor: pointer; }
+.done-order .receipt-wrap { margin: 0; }
+.done-actions { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; width: 100%; }
+.dock-hours button[aria-pressed="true"] { border-color: var(--color-green); background: #EEF5F0; box-shadow: inset 0 0 0 1px var(--color-green); }
+.ship-note .ic { flex: none; margin-top: 2px; }
+
+/* 하차 시간 칩: 한 줄에 세 개 */
+.dock-hours { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.dock-hours button { padding: 0 4px !important; font-size: 12px !important; white-space: nowrap; }

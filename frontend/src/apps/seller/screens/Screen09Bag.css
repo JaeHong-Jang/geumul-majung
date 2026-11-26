@@ -1,0 +1,20 @@
+.s-bag button.bag-card:hover {
+  background: var(--color-white);
+}
+.s-bag .bag-card__title {
+  font-weight: 700;
+  font-size: var(--font-secondary);
+  line-height: 21px;
+  color: var(--c-text);
+}
+.s-bag .bag-card__desc {
+  font-size: var(--font-secondary);
+  line-height: 18px;
+  color: var(--c-muted);
+}
+.s-bag .bag-card__line {
+  font-size: var(--font-secondary);
+  line-height: 20px;
+  color: var(--c-text);
+  white-space: pre-wrap;
+}

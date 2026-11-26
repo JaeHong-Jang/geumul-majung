@@ -1,0 +1,23 @@
+.s-order .s18-card__title {
+  font-weight: 700;
+  font-size: var(--font-secondary);
+  line-height: 21px;
+  color: var(--c-text);
+}
+.s-order .s18-card__row {
+  font-size: var(--font-secondary);
+  line-height: 20px;
+  white-space: pre-wrap;
+}
+.s-order .s18-card__desc {
+  font-size: var(--font-secondary);
+  line-height: 18px;
+  color: var(--c-muted);
+}
+.s-order .s18-card--link {
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+.s-order .s18-card--link:active {
+  filter: brightness(0.97);
+}

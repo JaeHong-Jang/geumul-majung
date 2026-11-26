@@ -1,0 +1,13 @@
+[project]
+name = "masdae-market-backend"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = ["fastapi", "uvicorn", "sqlalchemy>=2", "pydantic>=2", "httpx", "anthropic", "pyyaml", "psycopg[binary]", "pyjwt[crypto]>=2.10"]
+
+[project.optional-dependencies]
+stt = ["faster-whisper>=1.2"]   # 마대 등록 말로 입력(로컬 Whisper). 없으면 화면에서 버튼이 숨겨짐(계약 27절)
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+markers = ["live: Ollama 실제 호출 (꺼져 있으면 skip)"]

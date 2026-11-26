@@ -1,0 +1,4 @@
+.s-chat .seller-message { max-width: 90%; padding: 12px; border: 1px solid var(--c-border); border-radius: 12px; overflow-wrap: anywhere; }
+.s-chat .seller-message--mine { align-self: flex-end; background: var(--color-surfaceSubtle); border-bottom-right-radius: 2px; }
+.s-chat .seller-message--other { align-self: flex-start; background: var(--c-surface); border-bottom-left-radius: 2px; }
+.s-chat .seller-message small { display: block; }

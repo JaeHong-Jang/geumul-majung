@@ -1,0 +1,15 @@
+.s-poolDeadline .scroll-body {
+  margin-bottom:0;
+}
+.s-poolDeadline .pool-deadline__headline {
+  width:100%;
+}.s-poolDeadline .pool-deadline__option {
+  background: var(--c-surface);
+  transition: filter 0.15s ease;
+}
+.s-poolDeadline .pool-deadline__option:hover {
+  filter: brightness(0.98);
+}
+.s-poolDeadline .pool-deadline__option:active {
+  filter: brightness(0.95);
+}

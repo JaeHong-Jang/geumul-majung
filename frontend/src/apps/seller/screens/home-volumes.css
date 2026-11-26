@@ -1,0 +1,19 @@
+.seller-volume-list {list-style:none;margin:0;padding:0;}
+.seller-volume-row {display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;padding:20px 0;border-bottom:1px solid var(--color-border);}
+.seller-volume-picture {width:44px;height:44px;object-fit:contain;border-radius:50%;background:var(--color-mint);}
+.seller-volume-copy {display:flex;flex-direction:column;gap:4px;min-width:0;overflow-wrap:anywhere;}
+.seller-volume-copy strong {font-size:16px;color:var(--color-ink);}
+.seller-volume-copy small,.seller-volume-copy > span,.seller-volume-count {font-size:13px;color:var(--color-body);}
+.seller-volume-price {display:flex;flex-direction:column;gap:6px;text-align:right;white-space:nowrap;}
+.seller-volume-price strong {font-size:22px;color:var(--color-ink);}
+.seller-volume-price small {font-size:13px;}
+.seller-volume-price > span {font-size:11px;color:var(--color-body);}
+
+/* 판매자 홈 판매 카드: 높이를 줄이고 판매 등록 버튼을 또렷하게 */
+.seller-hero-compact .shell-hero.shell-hero { min-height: 0; padding: 14px 16px; gap: 4px; }
+.seller-hero-compact .shell-hero-top { display: none; }
+.seller-hero-compact .shell-hero.shell-hero h2 { font-size: 19px; line-height: 1.3; }
+.seller-hero-compact .shell-hero-copy { font-size: 12px; line-height: 1.4; opacity: .9; }
+.seller-hero-compact .shell-hero-actions { margin-top: 8px; }
+.seller-hero-compact .shell-hero.shell-hero .shell-hero-actions > button { min-height: 40px !important; height: 40px; padding: 0 14px; font-size: 15px; font-weight: 800; }
+.seller-hero-compact .shell-hero-side.shell-hero-side { min-height: 0; }

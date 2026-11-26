@@ -1,0 +1,42 @@
+/* 구매 희망: 목록 카드와 올리기 양식. 대표 품목 격자는 explore.css의 .material-grid를 함께 쓴다. */
+.want-lead { margin: 0; font-size: 14px; }
+.want-list { display: flex; flex-direction: column; gap: 10px; }
+.want-card { display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: var(--radius-card); background: var(--color-white); }
+.want-card.closed { opacity: .7; }
+.want-card-open { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 12px; align-items: start; width: 100%; text-align: left; font: inherit; color: inherit; }
+.want-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.want-copy strong { font-size: 22px; line-height: 1.2; color: var(--color-ink); }
+.want-copy small { font-size: 13px; color: var(--color-body); }
+.want-copy span { font-size: 14px; font-weight: 700; color: var(--color-ink); }
+.want-price { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; text-align: right; white-space: nowrap; }
+.want-price small { font-size: 11px; color: var(--color-body); }
+.want-price b { font-size: 16px; line-height: 1.2; color: var(--color-green); }
+.want-price b.none { color: var(--color-body); font-size: 14px; }
+.want-price em { font-style: normal; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+.want-price em.nego { background: #E3F2E8; color: #1F7A45; }
+.want-price em.fixed { background: #F1F2F3; color: var(--color-body); }
+.want-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-top: 1px solid var(--color-border); padding-top: 8px; }
+.want-actions { display: flex; gap: 12px; }
+.want-actions .text-button { font-size: 13px; }
+.want-picked { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.want-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; }
+.want-unit { min-height: 48px; align-items: stretch; }
+.want-unit button { padding: 0 12px; }
+.want-presets { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.want-presets button { min-height: 36px; padding: 0 12px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-white); font: inherit; font-size: 13px; cursor: pointer; }
+.want-check { gap: 8px; margin: 8px 0; font-size: 14px; }
+.want-errors { color: var(--color-body); text-align: center; }
+.section .material-grid, .section .segmented { margin-top: 8px; }
+
+/* 희망 가격: 단위, 하한가 ~ 상한가, 협상 여부 */
+.want-unit-toggle { margin-bottom: 10px; }
+.want-range { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 6px; align-items: end; }
+.want-range-dash { padding-bottom: 14px; font-weight: 700; color: var(--color-body); }
+.want-nego { margin-top: 10px; }
+.want-nego-help { margin: 6px 0 10px; }
+.want-ai {display:flex;flex-direction:column;gap:12px;margin:0 0 16px;}
+.want-ai:empty {display:none;}
+/* 판매 중 맞는 매물(에이전트 13) */
+.want-match-head { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; word-break: keep-all; }
+.want-match-why { margin: -4px 0 10px; padding: 0 4px; font-size: 13px; font-weight: 700; color: var(--color-green); word-break: keep-all; }
+.want-match.is-partial .want-match-why { color: var(--color-body); font-weight: 400; }

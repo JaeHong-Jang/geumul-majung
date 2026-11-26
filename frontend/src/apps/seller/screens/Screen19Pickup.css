@@ -1,0 +1,23 @@
+.s-pickup .s19-card__title {
+  font-weight: 700;
+  font-size: var(--font-secondary);
+  line-height: 21px;
+  color: var(--c-text);
+}
+.s-pickup .s19-card__row {
+  font-size: var(--font-secondary);
+  line-height: 20px;
+  white-space: pre-wrap;
+}
+.s-pickup .s19-card__desc {
+  font-size: var(--font-secondary);
+  line-height: 18px;
+  color: var(--c-muted);
+}
+.s-pickup .s19-card--action {
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+.s-pickup .s19-card--action:active {
+  filter: brightness(0.97);
+}

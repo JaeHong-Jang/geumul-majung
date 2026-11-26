@@ -1,0 +1,48 @@
+:root {
+  --font-app: NotoSansKR, sans-serif;
+  --font: var(--font-app);
+  --radius-card: 14px;
+  --radius-hero: 18px;
+  --shadow-card: 0 2px 9px rgb(39 76 50 / 6%);
+  --screen-top-inset: max(44px, env(safe-area-inset-top));
+  --font-secondary: 14px;
+  --my-header-bg: var(--color-background);
+  --my-header-text: var(--color-ink);
+  --color-green: #116B55; /* HW 하윤 pine: 글자·선·면 공용, 흰 대비 6.6:1 */
+  --color-greenDark: #0B5543;
+  --color-kakao: #FEE500;
+  --color-gold: #AC6715;
+  --color-cream: #F7FBF8;
+  --color-mint: #E8F4EE;
+  --color-background: #F5F7F8;
+  --color-ink: #182A2B;
+  --color-inkMuted: #3F5146;
+  --color-body: #55645B;
+  --color-hint: var(--color-body);
+  --color-divider: #C9D3CB;
+  --color-border: #E3E9E4;
+  --color-borderStrong: #DCE4DD;
+  --color-borderInput: #CFD9D1;
+  --color-borderMint: #E8F4EE;
+  --color-surfaceSubtle: #F0F3F1;
+  --color-surfaceGray: #F0F3F1;
+  --color-surfacePhoto: #F0F3F1;
+  --color-surfaceSoft: #F0F3F1;
+  --color-gradeB: #F0F3F1;
+  --color-gradeC: #F0F3F1;
+  --color-gradeCText: var(--color-ink);
+  --color-statusShippingBg: #F0F3F1;
+  --color-statusShippingText: var(--color-ink);
+  --color-priceUp: #C2410C;
+  --color-priceDown: #1D5FA8;
+  --color-white: #ffffff;
+  /* 면 채우기: HW 하윤과 같이 pine 면 + 흰 글씨 */
+  --color-brand: var(--color-green);
+  --color-onBrand: #FFFFFF;
+  --color-amber: #85570F;
+  --color-title: #263B31;
+  --color-peach: #F9E6DA;
+  --ease-out: cubic-bezier(.2,.8,.2,1);
+  /* HW 하윤 지도 타일: 채도 낮춘 OSM */
+  --tile-filter: saturate(.6) contrast(1);
+}

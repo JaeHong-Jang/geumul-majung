@@ -1,0 +1,21 @@
+.s-settlement .settle-calc {
+  background: var(--c-surface);
+}
+.settle-calc__row {
+  font-size: var(--font-secondary);
+  line-height: 20px;
+  color: var(--c-text);
+  white-space: pre-wrap;
+}
+.s-settlement .settle-link {
+  background: var(--c-surface);
+  align-items: flex-start;
+  text-align: left;
+  transition: filter 0.15s ease;
+}
+.s-settlement .settle-link:hover {
+  filter: brightness(0.98);
+}
+.s-settlement .settle-link:active {
+  filter: brightness(0.95);
+}

@@ -1,0 +1,120 @@
+# 마대 장터 앱 안 오케스트라 선언 (단일 기준). 코드는 이 파일을 읽어 팀·에이전트·흐름·게이트를 만든다.
+name: 마대 장터 에이전트 하네스
+version: 0.1.0
+
+llm:
+  provider: ollama            # ollama | claude | mock | off  (환경변수 LLM_PROVIDER가 우선)
+  ollama:
+    url: http://172.20.32.1:11434   # 환경변수 OLLAMA_URL 우선 (WSL → Windows)
+    model: ax4-light:q4_K_M
+    timeout_s: 15
+  claude:
+    model: claude-sonnet-5-5  # 팀 결정(노션 백엔드 설계 5절). 키는 환경변수 ANTHROPIC_API_KEY
+    max_tokens: 2000
+
+teams:
+  - id: command
+    name: 지휘
+    agents: [orchestrator, assistant]
+  - id: sorting
+    name: "분류, 등급 팀"
+    agents: [profiling, vision, grading, intake, material]
+  - id: trade
+    name: 거래 팀
+    agents: [bundling, pricing, want_intake, want_price, want_match]
+  - id: review
+    name: "평가, 규제 팀"
+    agents: [economics, regulation]
+
+agents:
+  - {id: orchestrator, team: command, no: 0, name: 지휘 AI, card: agents/orchestrator.md, llm: true}
+  - {id: profiling, team: sorting, no: 1, name: 프로파일링, card: agents/sorting/profiling.md, llm: true}
+  - {id: vision, team: sorting, no: 2, name: 품목 구성 정리, card: agents/sorting/vision.md, llm: true}
+  - {id: grading, team: sorting, no: 3, name: "등급, 통과증", card: agents/sorting/grading.md, llm: false}
+  - {id: bundling, team: trade, no: 4, name: "묶음, 수거", card: agents/trade/bundling.md, llm: true}
+  - {id: pricing, team: trade, no: 5, name: "시세, 판매 시기", card: agents/trade/pricing.md, llm: true}
+  - {id: economics, team: review, no: 6, name: "경제성, 환경성", card: agents/review/economics.md, llm: true}
+  - {id: regulation, team: review, no: 7, name: 규제 검토, card: agents/review/regulation.md, llm: true}
+  - {id: assistant, team: command, no: 8, name: 대화 도우미, card: agents/assistant.md, llm: true}
+  - {id: intake, team: sorting, no: 9, name: 말 입력 정리, card: agents/sorting/intake.md, llm: true}
+  - {id: material, team: sorting, no: 10, name: 재질 추천, card: agents/sorting/material.md, llm: false}
+  - {id: want_intake, team: trade, no: 11, name: 구매 희망 정리, card: agents/trade/want_intake.md, llm: true}
+  - {id: want_price, team: trade, no: 12, name: 희망가 추천, card: agents/trade/want_price.md, llm: false}
+  - {id: want_match, team: trade, no: 13, name: 판매 매물 맞추기, card: agents/trade/want_match.md, llm: false}
+
+# 앱 이벤트 → 실행할 에이전트 순서. 순서는 규칙(이 파일)이 정하고 LLM은 바꾸지 않는다.
+flows:
+  profile_company: [profiling]                  # 공장 가입 때 안내
+  grade_bag: [vision, grading]                  # 마대 등록 후 등급
+  listing_advice: [pricing, bundling, economics]  # 판매 올리기 전 추천
+  deal_check: [regulation]                      # 주문 생성 때 법 체크리스트
+  assistant_chat: [assistant]                   # 앱 대화(시세·주문·법·등급·사용법)
+  bag_intake: [intake, material]                # 마대 등록 말 입력(음성 인식 글) → 칸 채우기, 재질 추천
+  material_suggest: [material]                  # 마대 등록에서 품목을 고르면 재질 추천
+  want_intake: [want_intake, want_price, want_match]   # 구매 희망 말 입력(음성 인식 글) → 칸 채우기, 희망가 추천, 판매 매물 맞추기
+  want_price: [want_price]                      # 구매 희망에서 재질을 고르면 희망가 추천
+  want_match: [want_match]                      # 구매 희망 칸(재질, 수량, 상한가)이 바뀌면 판매 매물 맞추기
+
+gates:
+  - id: evidence      # 주장마다 근거 1개 이상, law 근거는 law_articles.json에 있는 id, 숫자 있는 주장은 dataset/calc/input/assumption/law 근거
+  - id: wording       # policies/forbidden-phrases.json 금지 표현, '모름→없음' 바꿔치기
+  - id: privacy       # 전화번호·이메일·주민번호 모양 차단
+
+summary:
+  max_retries: 1      # LLM 요약이 게이트에 걸리면 1회 재요청, 또 걸리면 템플릿 요약
+
+# 팀 가정(구매자 요구 스펙 확인 전). 바꾸면 테스트도 같이 바꾼다.
+assumptions:
+  grade_thresholds: {A: 0.95, B: 0.90, C: 0.80}   # 순도(목표 재질 무게/전체). C 미만은 통과증 없음
+  hazard_materials: [oil, pcb, asbestos, chemical, medical, grease, solvent, paint, 오일, 기름, 폐유, 유류, 윤활유, 그리스, 석면, 화학약품, 용제, 페인트, 의료폐기물]
+  material_aliases:          # 표준 이름: [별칭…]  (소문자·앞뒤 공백 무시, 공백 포함 별칭 가능)
+    pp: [피피, 폴리프로필렌, polypropylene, pp 자투리, pp자투리, pp 스크랩, pp 사출, pp-h, pp-c]
+    pe: [피이, 폴리에틸렌, polyethylene, hdpe, ldpe, lldpe, 비닐]
+    abs: [에이비에스]
+    ps: [폴리스티렌, polystyrene]
+    pet: [페트, 피이티]
+    pvc: [피브이씨, 염화비닐]
+    철: [고철, 철스크랩, 철 스크랩, 철판, 쇳조각, 철캔, iron, steel]          # 시세 품목 철스크랩과 연결(tools/calc.MATERIAL_PRICE_ITEM)
+    알루미늄: [알미늄, 알루미늄캔, 알루미늄 캔, aluminum, aluminium, alu]    # 알루미늄캔
+    골판지: [폐골판지, 박스, 종이박스, 골판지 박스, 폐박스, corrugated]        # 폐골판지
+    구리: [구리선, 동 스크랩, 동스크랩, copper]                   # 시세 품목 없음(공개 시세 표에 구리가 없음)
+  code_materials:           # 품목 코드 → 해당하는 표준 재질(재질 추천 후보). 하나뿐이면 바로 채운다
+    51-03-01: [pp, pe, abs, ps, pet]
+    51-03-03: [pvc]
+    51-03-07: [pe, pp, pet]
+    51-28-02: [골판지]
+    51-29-01: [철]
+    51-29-02: [알루미늄]
+    51-29-03: [알루미늄, 철]
+    51-29-04: [철]
+  material_codes:           # 말 입력에서 재질만 말했을 때의 품목 코드
+    pp: 51-03-01
+    pe: 51-03-01
+    abs: 51-03-01
+    ps: 51-03-01
+    pet: 51-03-01
+    pvc: 51-03-03
+    철: 51-29-01
+    알루미늄: 51-29-02
+    골판지: 51-28-02
+    구리: 51-29-02
+  waste_keywords:           # 말 입력에 이 말이 있으면 그 품목 코드(재질보다 우선, 위에서부터 먼저 찾은 것)
+    포장재: 51-03-07
+    합성수지: 51-03-01
+    플라스틱: 51-03-01
+    종이팩: 51-28-01
+    벽지: 51-28-03
+    캔: 51-29-03
+    비철: 51-29-02
+    고철: 51-29-01
+    가구: 51-20-27
+    목재: 51-20-99
+    나무: 51-20-99
+    파레트: 51-20-99
+    팔레트: 51-20-99
+    종이: 51-28-02
+  min_lot_kg: 1000          # 이보다 적으면 '모아서 팔기' 추천
+  bundle_radius_km: 3
+  pool_min_price_ratio: 0.7   # 공동판매 참여 단가 하한 비율(가정). 시세의 70%, 시세가 없으면 만든 공장 단가의 70%. 0.01원 참여로 전원 단가를 깎는 것을 막는다
+  incineration_krw_per_ton: {low: 156241, high: 166241, source: INCIN-2026-09}
+  low_value_krw_per_kg: 200   # 가정: 공개 시세가 이 단가 미만이고 구매 희망도 없으면 단독 판매 어려움으로 보고 공동판매 안내

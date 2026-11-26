@@ -1,0 +1,9 @@
+.top-bar h1 { white-space:nowrap; flex-shrink:0; }
+.top-bar { gap:8px; }
+.top-bar .app-button { width:auto; padding-inline:10px; }
+.category-chips, .period-tabs, .segment { padding-block:4px; min-height:52px; }
+.category-chips > button, .praise-chip { flex-shrink:0; white-space:nowrap; }
+.listing-copy b { word-break:keep-all; overflow-wrap:normal; }
+.row:has(> .stars) .listing-copy { flex-basis:100%; }
+.favorite-heart { font-size:26px; color:var(--color-green); line-height:1; }
+.cart-count { background:var(--color-brand); color:var(--color-onBrand); border-radius:12px; padding:1px 6px; }

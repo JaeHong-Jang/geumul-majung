@@ -1,0 +1,57 @@
+﻿**********************
+Windows PowerShell 기록 시작
+시작 시간: 20261105024221
+사용자 이름: DESKTOP-NM7CB4G\User
+RunAs 사용자: DESKTOP-NM7CB4G\User
+구성 이름: 
+Machine: DESKTOP-NM7CB4G (Microsoft Windows NT 10.0.26200.0)
+호스트 응용 프로그램: powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\User\Desktop\대학교\3학년\AI Innovation 공모전\masdae-market\janjaemi-app\setup_android_emulator.ps1
+프로세스 ID: 26820
+PSVersion: 5.1.26100.9711
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.9711
+BuildVersion: 10.0.26100.9711
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+
+==== 1/6 JDK 17 확인 ====
+JAVA_HOME = C:\Users\User\AppData\Local\Android\jdk17
+
+==== 2/6 Android SDK 명령줄 도구 ====
+
+==== 3/6 에뮬레이터, 시스템 이미지 설치 (가장 오래 걸림) ====
+[=======================================] 100% Computing updates...
+
+==== 4/6 가상 기기 만들기 ====
+사용할 기기 정의: pixel_7
+[=======================================] 100% Fetch remote repository...
+Auto-selecting single ABI x86_64
+accel:
+0
+WHPX(10.0.26200) is installed and usable.
+accel
+
+==== 5/6 Flutter SDK ====
+Cloning into 'C:\Users\User\flutter'...
+remote: Enumerating objects: 17278, done.
+remote: Counting objects: 100% (17278/17278), done.
+remote: Compressing objects: 100% (13853/13853), done.
+remote: Total 17278 (delta 3742), reused 9091 (delta 2524), pack-reused 0 (from 0)
+Receiving objects: 100% (17278/17278), 34.21 MiB | 12.42 MiB/s, done.
+Resolving deltas: 100% (3742/3742), done.
+Updating files: 100% (16076/16076), done.
+You may need to restart any open editors for them to read new settings.
+
+
+==== 6/6 에뮬레이터 실행 + 잔재미 앱 설치 ====
+
+부팅 기다리는 중...
+
+
+**********************
+Windows PowerShell 기록 끝
+종료 시간: 20261105024708
+**********************

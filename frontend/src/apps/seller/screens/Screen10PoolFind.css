@@ -1,0 +1,19 @@
+.s-poolFind .pool-find__headline {
+  width:100%;
+}
+.s-poolFind .pool-find__lead {
+  width:100%;
+  font-size: var(--font-secondary);
+  line-height: 18px;
+  color: var(--c-muted);
+}
+.s-poolFind .pool-find__option {
+  background: var(--c-surface);
+  transition: filter 0.15s ease;
+}
+.s-poolFind .pool-find__option:hover {
+  filter: brightness(0.98);
+}
+.s-poolFind .pool-find__option:active {
+  filter: brightness(0.95);
+}

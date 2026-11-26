@@ -1,0 +1,73 @@
+/* 구매자 홈: 공동판매 묶음 카드를 절반 높이로 */
+.buyer-hero-compact .shell-hero.shell-hero { min-height: 0; padding: 12px 14px; gap: 6px; }
+.buyer-hero-compact .shell-hero.shell-hero h2 { font-size: 17px; line-height: 1.3; }
+.buyer-hero-compact .shell-hero-top { min-height: 22px; }
+.buyer-hero-compact .shell-hero.shell-hero .shell-hero-top > small { height: 22px; font-size: 12px; padding: 0 8px; }
+.buyer-hero-compact .shell-hero-copy { font-size: 12px; line-height: 1.4; }
+.buyer-hero-compact .shell-hero.shell-hero .shell-hero-actions > button:not(.shell-slide) { min-height: 36px; padding: 6px 12px; font-size: 13px; }
+.buyer-hero-compact .shell-hero-side.shell-hero-side { min-height: 0; }
+.buyer-hero-compact .shell-slide { min-height: 40px; }
+.buyer-hero-compact .shell-hero.shell-hero { gap: 4px; }
+.buyer-hero-compact .shell-hero-top { min-height: 20px; }
+.buyer-hero-compact .shell-hero.shell-hero .shell-hero-top > small { height: 20px; font-size: 11px; }
+.buyer-hero-compact .shell-hero-badge .badge, .buyer-hero-compact .shell-hero-badge > * { font-size: 11px; padding-top: 1px; padding-bottom: 1px; }
+.buyer-hero-compact .shell-hero.shell-hero h2 { font-size: 16px; }
+.buyer-hero-compact .shell-hero-actions { margin-top: 4px; }
+.buyer-hero-compact .shell-hero.shell-hero .shell-hero-actions .app-button { min-height: 32px; height: 32px; padding: 0 12px; font-size: 13px; }
+/* 전역 버튼 높이 규칙(52px)보다 우선 */
+.buyer-hero-compact .shell-hero-actions .app-button { min-height: 32px !important; height: 32px !important; }
+.buyer-hero-compact .shell-hero-top, .buyer-hero-compact .shell-hero-badge > * { min-height: 0 !important; }
+/* 제목에 '공동판매'가 있어 위 칩은 숨기고, 배지는 오른쪽 위에 겹쳐 한 줄을 아낀다 */
+.buyer-hero-compact .shell-hero-top { position: absolute; top: 12px; right: 14px; z-index: 1; }
+.buyer-hero-compact .shell-hero.shell-hero .shell-hero-top > small { display: none; }
+.buyer-hero-compact .shell-hero.shell-hero h2 { padding-right: 104px; }
+.buyer-hero-compact .shell-hero.shell-hero:not(:has(.shell-hero-badge)) h2 { padding-right: 0; white-space: nowrap; }
+
+/* 홈 구역 구분: 회색 바탕 위에 구역마다 흰 판, 판 안의 카드는 옅은 회색 */
+.app.buyer .shell-home.shell-home { background: #ECEFED; gap: 12px; }
+.app.buyer .shell-home .shell-section { padding: 16px; border-radius: 18px; background: var(--color-white); box-shadow: 0 1px 3px rgb(20 40 30 / 6%); }
+.app.buyer .shell-home .shell-section-head h2 { font-size: 17px; font-weight: 800; }
+.app.buyer .shell-home .shell-section .shell-market > article { background: #F4F6F5; border-color: transparent; box-shadow: none; }
+.app.buyer .shell-home .shell-section .buyer-listing-list { padding: 0; background: transparent; }
+.app.buyer .shell-home .shell-section .want-card { background: #F4F6F5; }
+.app.buyer .shell-home .shell-ai { border-color: transparent; border-radius: 18px; box-shadow: 0 1px 3px rgb(20 40 30 / 6%); }
+.app.buyer .shell-home .shell-stats.shell-stats > * { border-color: transparent; box-shadow: 0 1px 3px rgb(20 40 30 / 6%); }
+.app.buyer .shell-home .shell-header.shell-header::after { background: #ECEFED; }
+
+/* 오늘의 시세: 판 안 여백과 카드 높이를 줄인다 */
+.app.buyer .shell-home .shell-section:has(.shell-market) { padding: 12px 12px 12px; gap: 8px; }
+.app.buyer .shell-home .shell-section .shell-market { gap: 6px; }
+.app.buyer .shell-home .shell-section .shell-market > article { height: 112px; padding: 8px; gap: 2px; }
+.app.buyer .shell-home .shell-section .shell-market-chart { height: 32px; }
+.app.buyer .shell-home .shell-section .shell-market button b { font-size: 15px; }
+/* 구역 머리 줄을 더 낮게: 판 위 여백 10px, 제목 줄 28px(전체 보기 버튼 높이 포함) */
+.app.buyer .shell-home .shell-section { padding: 10px 12px 12px; gap: 6px; }
+.app.buyer .shell-home .shell-section:has(.shell-market) { padding: 10px 12px 12px; gap: 6px; }
+.app.buyer .shell-home .shell-section-head.shell-section-head { min-height: 28px; }
+.app.buyer .shell-home .shell-section-head.shell-section-head button { min-height: 28px; height: 28px; padding: 0; }
+.app.buyer .shell-home .shell-section-head.shell-section-head h2 { font-size: 16px; line-height: 28px; }
+.app.buyer .shell-home .shell-ai { padding: 10px 12px 12px; }
+.app.buyer .shell-home .shell-ai-head { margin-bottom: 2px; min-height: 28px; }
+.app.buyer .shell-home .shell-ai-head h2 { font-size: 16px; }
+.app.buyer .shell-home .shell-ai-head button { min-height: 28px; height: 28px; padding: 0; }
+.app.buyer .shell-home .shell-section-head.shell-section-head, .app.buyer .shell-home .shell-ai-head { height: 28px !important; min-height: 28px !important; }
+.app.buyer .shell-home .shell-section-head.shell-section-head button, .app.buyer .shell-home .shell-ai-head button { min-height: 28px !important; height: 28px !important; }
+/* AI 제안: 닫기(X)와 이동(›) 버튼을 같은 크기 원으로, 세로 가운데 정렬 */
+.app.buyer .shell-home .shell-ai li { grid-template-columns: 40px minmax(0, 1fr) 36px 36px; gap: 8px; align-items: center; }
+.app.buyer .shell-home .shell-ai.shell-ai li > button { width: 36px !important; height: 36px !important; min-width: 36px; min-height: 36px !important; padding: 0 !important; margin: 0; line-height: 1; display: grid; place-items: center; align-self: center; }
+.app.buyer .shell-home .shell-ai.shell-ai li > button img { width: 14px; height: 14px; }
+/* 공동판매 묶음: 옆으로 넘겨 보는 카드 */
+.buyer-bundles { display: flex; flex-direction: column; gap: 6px; }
+.buyer-bundles-track { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin: 0 -20px; padding: 0 20px; scroll-padding: 0 20px; }
+.buyer-bundles-track::-webkit-scrollbar { display: none; }
+.buyer-bundles-track > .buyer-hero-compact { flex: 0 0 100%; scroll-snap-align: start; }
+.buyer-bundles-dots { display: flex; justify-content: center; gap: 5px; }
+.buyer-bundles-dots button { width: 6px; height: 6px; min-height: 0 !important; padding: 0; border: 0; border-radius: 3px; background: #C5CEC9; transition: width .2s; }
+.buyer-bundles-dots button[aria-current="true"] { width: 16px; background: var(--color-green); }
+.app.buyer .shell-home .shell-ai.shell-ai li > button { min-width: 36px !important; max-width: 36px !important; }
+.app.buyer .buyer-bundles-dots button { flex: none !important; width: 6px !important; min-width: 0 !important; max-width: 16px; height: 6px !important; }
+.app.buyer .buyer-bundles-dots button[aria-current="true"] { width: 16px !important; }
+
+/* 공동판매 묶음: 한 장씩 꽉 차게, 옆 카드는 안 보임. 밀면 한 장씩 넘어감 */
+.buyer-bundles-track { gap: 12px !important; margin: 0 !important; padding: 0 !important; scroll-padding: 0 !important; overscroll-behavior-x: contain; cursor: grab; user-select: none; }
+.buyer-bundles-track > .buyer-hero-compact { flex: 0 0 100% !important; min-width: 0; scroll-snap-align: start; scroll-snap-stop: always; }

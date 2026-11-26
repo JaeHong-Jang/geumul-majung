@@ -1,0 +1,11 @@
+# Azure App Service 배포용. 내용은 backend/pyproject.toml과 맞춘다
+fastapi
+uvicorn
+sqlalchemy>=2
+pydantic>=2
+httpx
+anthropic
+pyyaml
+psycopg[binary]
+pyjwt[crypto]>=2.10
+faster-whisper>=1.2   # 말로 입력(서버 안 Whisper)

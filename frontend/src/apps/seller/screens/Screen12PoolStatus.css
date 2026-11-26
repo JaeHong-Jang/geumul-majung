@@ -1,0 +1,19 @@
+.s-poolStatus .pool-status__members-title {
+  font-weight: 700;
+  font-size: var(--font-secondary);
+  line-height: 21px;
+}
+.s-poolStatus .pool-status__member {
+  font-size: var(--font-secondary);
+  line-height: 20px;
+  white-space: pre-wrap;
+}.s-poolStatus .pool-status__option {
+  background: var(--c-surface);
+  transition: filter 0.15s ease;
+}
+.s-poolStatus .pool-status__option:hover {
+  filter: brightness(0.98);
+}
+.s-poolStatus .pool-status__option:active {
+  filter: brightness(0.95);
+}

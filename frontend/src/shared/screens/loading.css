@@ -1,0 +1,17 @@
+@import "../theme.css";
+.splash {
+  background: var(--color-brand);
+  position: absolute;
+  inset: 0;
+  z-index: 1000;
+  opacity: 1;
+  animation: splash-exit 500ms 3800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  overflow: hidden;
+}
+@keyframes splash-exit {
+  from { transform: translateY(0); }
+  to { transform: translateY(-100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .splash { animation: none; }
+}

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#116b55" />
+    <meta name="description" content="HW 하윤 운송 파트너. 내 차량에 맞는 운송 콜을 찾고, 운송부터 정산까지 한곳에서 확인하세요." />
+    <title>HW 하윤 · 운송 파트너</title>
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
+    <link rel="stylesheet" href="./vendor/leaflet.css" />
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./reference.css" />
+    <link rel="stylesheet" href="./readability.css" />
+    <script src="./vendor/leaflet.js" defer></script>
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">본문으로 바로가기</a>
+    <div id="offline-banner" class="offline-banner" role="status" hidden>인터넷 연결이 끊겼어요. 저장된 화면은 볼 수 있지만 수락과 운송 단계 전송은 연결된 뒤에 할 수 있어요.</div>
+    <div id="app"></div>
+    <div id="dialog-root"></div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <noscript>HW 하윤을 이용하려면 브라우저에서 JavaScript를 켜 주세요.</noscript>
+  </body>
+</html>

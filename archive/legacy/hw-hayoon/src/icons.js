@@ -1,0 +1,42 @@
+const paths = {
+  search: '<circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4 4"/>',
+  grid: '<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',
+  truck: '<path d="M3 5h11v12H3zM14 9h4l3 4v4h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/><path d="M17 10v4h4"/>',
+  wallet: '<path d="M20 8V5a2 2 0 0 0-2-2L5 6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h15V8H5a2 2 0 0 1 0-4"/><path d="M21 12h-5v5h5"/><path d="M17.5 14.5h.01"/>',
+  bookmark: '<path d="M6 4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17l-6-4-6 4Z"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>',
+  settings: '<path d="m9 3-.6 3-2.7 1-2.8-1  -2 3 2.2 2-.1 3L1 16l2 3 3-1 2.5 1L9 22h5l.6-3 2.5-1 3 1 2-3-2-2 .1-3 2-2-2-3-2.8 1-2.7-1-.6-3Z"/><circle cx="11.5" cy="12.5" r="3"/>',
+  bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>',
+  pin: '<path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>',
+  chevron: '<path d="m9 5 7 7-7 7"/>',
+  down: '<path d="m6 9 6 6 6-6"/>',
+  arrow: '<path d="M4 12h16m-6-6 6 6-6 6"/>',
+  arrowUp: '<path d="m7 17 10-10M7 7h10v10"/>',
+  check: '<path d="m5 12 4 4L19 6"/>',
+  close: '<path d="m6 6 12 12M6 18 18 6"/>',
+  filter: '<path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2" fill="currentColor"/><circle cx="15" cy="17" r="2" fill="currentColor"/>',
+  list: '<path d="M9 5h12M9 12h12M9 19h12M3 5h.01M3 12h.01M3 19h.01"/>',
+  map: '<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6ZM9 3v15m6-12v15"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/>',
+  box: '<path d="m3 6 9-4 9 4v12l-9 4-9-4V6Zm0 0 9 4 9-4M12 10v12M7 4l9 4"/>',
+  leaf: '<path d="M20 3C9 2 3 7 4 14s12 10 15-1c1-3 1-7 1-10ZM3 21 14 10"/>',
+  route: '<circle cx="6" cy="5" r="2"/><circle cx="18" cy="19" r="2"/><path d="M6 7v5h9a3 3 0 0 0 0-6h-2m5 11v-3H9"/>',
+  target: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 1v4m0 14v4M1 12h4m14 0h4"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  minus: '<path d="M5 12h14"/>',
+  shield: '<path d="m12 2 8 3v6c0 6-8 11-8 11S4 17 4 11V5l8-3Z"/><path d="m8 11 3 3 5-5"/>',
+  help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 8.5a2.5 2.5 0 1 1 4 2.5c-1 .5-1.5 1-1.5 2M12 17h.01"/>',
+  logout: '<path d="M9 3H4v18h5m5-16 7 7-7 7M8 12h13"/>',
+  refresh: '<path d="M20 7V2l-4 4a8 8 0 1 0 3 12M20 2h-5"/>',
+  star: '<path d="m12 2 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1Z"/>',
+  file: '<path d="M14 2H5v20h14V7l-5-5Zm0 0v6h5M8 12h8M8 16h6"/>',
+  scan: '<path d="M8 3H3v5m13-5h5v5M3 16v5h5m8 0h5v-5M7 7h3v3H7zm7 0h3v3h-3zM7 14h3v3H7zm7 0h3v3h-3z"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/>',
+  building: '<path d="M3 21V9l6-3v5l6-3v13M15 14h6v7M7 15h1m3 0h1m-5 3h1m3 0h1M18 5v9M2 21h20"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 1v2m0 18v2M1 12h2m18 0h2M4 4l2 2m12 12 2 2M4 20l2-2M18 6l2-2"/>',
+};
+export function icon(name, size = 20) {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name] || paths.box}</svg>`;
+}
+export const brandMark = '<svg viewBox="0 0 44 44" aria-hidden="true"><rect width="44" height="44" rx="13" fill="#116b55"/><path d="M11 12v20m0-11h12V12m0 9v11m7-20v20m0-11h5" fill="none" stroke="white" stroke-width="3.2" stroke-linecap="round"/><circle cx="35" cy="31" r="3" fill="#c4e8d4"/></svg>';
+export const truckArt = '<svg viewBox="0 0 240 112" fill="none" aria-hidden="true"><path d="M12 91h215" stroke="#c3dbd0" stroke-width="2" stroke-dasharray="5 6"/><path d="M24 59c18-35 45-39 76-15s59 19 102-22" stroke="#bfdece" stroke-width="2" stroke-dasharray="4 5"/><circle cx="204" cy="20" r="6" fill="#9bc5ad"/><path d="M60 40h83v42H60z" fill="#6ea58b"/><path d="M143 52h25l17 19v11h-42" fill="#116b55"/><path d="M151 58h14l11 13h-25" fill="#d8ede1"/><path d="M70 49h62v24H70" stroke="#b5d9c5" stroke-width="2"/><circle cx="81" cy="85" r="10" fill="#314b40"/><circle cx="81" cy="85" r="4" fill="#d3e7db"/><circle cx="163" cy="85" r="10" fill="#314b40"/><circle cx="163" cy="85" r="4" fill="#d3e7db"/><path d="M44 66h10m-17 9h17" stroke="#8dbda3" stroke-width="3" stroke-linecap="round"/></svg>';

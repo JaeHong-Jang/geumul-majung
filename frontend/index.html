@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>잔재미</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #EEEEEE; overflow: hidden; color: #252525;
+               font-family: "Malgun Gothic", "Noto Sans KR", sans-serif; }
+  #stage { position: absolute; left: 50%; top: 50%; display: flex; gap: 56px; transform-origin: center; }
+  figure { margin: 0; text-align: center; }
+  figcaption { font-size: 22px; font-weight: 700; margin-bottom: 18px; }
+  iframe { display: block; width: 393px; height: 852px; border: 0; border-radius: 44px; background: #fff;
+           box-shadow: 0 0 0 10px #252525, 0 18px 50px rgba(0,0,0,.2); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <figure><figcaption>판매자</figcaption><iframe data-role="seller" src="seller/" allow="microphone" title="판매자 앱"></iframe></figure>
+  <figure><figcaption>구매자</figcaption><iframe data-role="buyer" src="buyer/" allow="microphone" title="구매자 앱"></iframe></figure>
+</div>
+<script>
+  // 두 폰이 창에 다 들어오도록 함께 줄인다(앱 내부 크기는 393×852 그대로).
+  const stage = document.getElementById('stage');
+  function fit() {
+    const s = Math.min(1, (innerHeight - 30) / (852 + 80), (innerWidth - 30) / (393 * 2 + 56 + 60));
+    stage.style.transform = `translate(-50%, -50%) scale(${s})`;
+  }
+  addEventListener('message', event => {
+    if (event.origin !== location.origin || event.data?.type !== 'janjaemi:open-app') return;
+    const role = event.data.role;
+    if (!['seller', 'buyer'].includes(role)) return;
+    const frame = document.querySelector(`iframe[data-role="${role}"]`);
+    if (frame) frame.src = `${role}/`;
+  });
+  addEventListener('resize', fit);
+  fit();
+</script>
+</body>
+</html>

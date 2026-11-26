@@ -1,0 +1,110 @@
+/* Repeated shell class raises specificity above legacy role selectors. */
+body {background:var(--color-background);font-family:var(--font-app);}
+.app * {scrollbar-width:none;}
+.app *::-webkit-scrollbar {display:none;}
+.shell-home.shell-home {display:flex;flex-direction:column;gap:20px;padding:20px 20px 20px;overflow:auto;min-height:0;flex:1;background:var(--color-background);font-family:var(--font-app);}
+.shell-home.shell-home > * {flex-shrink:0;}
+.shell-header.shell-header {position:relative;display:flex;flex-direction:column;gap:10px;height:auto;min-height:0;margin:0 -20px -20px;padding:12px 20px 40px;background:var(--color-brand);color:var(--color-onBrand);}
+.shell-header.shell-header:first-child {margin-top:-20px;padding-top:calc(12px + max(env(safe-area-inset-top,0px), var(--frame-safe-top,0px)));}
+/* 아래 내용이 둥글게 올라와 초록 영역과 이어지게 합니다. */
+.shell-header.shell-header::after {content:"";position:absolute;left:0;right:0;bottom:-1px;height:21px;border-radius:20px 20px 0 0;background:var(--color-background);}
+.shell-header-top {display:flex;align-items:center;gap:6px;min-width:0;}
+.shell-header-top > .ic {flex:none;filter:brightness(0) invert(1);}
+.shell-header-name {flex:1 1 0;min-width:0;}
+.shell-header-name > p {margin:0;font-size:12px;line-height:18px;color:#A8D4BB;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.app.app .shell-header-name > .tab-heading {width:auto;height:28px;min-height:28px;padding:0;}
+.app.app .shell-header-name .tab-heading h1 {font-size:20px;line-height:28px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--color-onBrand);font-weight:750;letter-spacing:-.065em;}
+.shell-header.shell-header .notification-bell {width:44px;height:44px;min-height:44px;margin-right:-6px;border:0;border-radius:50%;background:transparent;}
+.shell-header-top > .shell-badge {flex:none;white-space:nowrap;}
+.shell-badge.shell-badge {display:inline-flex;align-items:center;height:26px;min-height:26px!important;padding:3px 9px;border-radius:13px;font-size:13px;font-weight:500;line-height:18px;}
+.shell-search.shell-search {width:100%;height:48px;min-height:48px;border-radius:14px;background:var(--color-white);display:flex;align-items:center;gap:10px;padding:0 14px;color:var(--color-body);font-size:14px;text-align:left;}
+.shell-search > span {font-size:26px;flex:none;}
+.shell-search input {border:0;outline:none;min-width:0;width:100%;background:transparent;}
+.shell-search button {flex:none;min-height:44px;}
+.shell-stats.shell-stats {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+.shell-stats.shell-stats > * {min-width:0;height:56px;min-height:56px;padding:0 8px;background:var(--color-white);border:1px solid var(--color-border);border-radius:999px;box-shadow:var(--shadow-card);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;text-align:center;animation:shell-up .3s var(--ease-out) both .1s;}
+.shell-stats.shell-stats > * > span {font-size:13px;white-space:nowrap;color:var(--color-body);}
+.shell-stats.shell-stats > * > div {display:flex;align-items:center;justify-content:center;gap:4px;min-width:0;max-width:100%;}
+.shell-stats.shell-stats b {min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:14px;font-weight:700;white-space:nowrap;}
+.shell-hero.shell-hero {position:relative;overflow:hidden;isolation:isolate;flex:1;min-width:0;background:var(--color-brand);color:var(--color-onBrand);padding:22px 20px 20px;border-radius:var(--radius-hero);display:flex;flex-direction:column;gap:8px;min-height:200px;animation:shell-up .35s var(--ease-out) both;}
+.shell-hero.shell-hero > :not(.shell-hero-lines) {animation:shell-up .35s var(--ease-out) both;}
+.shell-hero.shell-hero > :nth-child(3) {animation-delay:60ms;}
+.shell-hero.shell-hero > :nth-child(4) {animation-delay:120ms;}
+.shell-hero.shell-hero > :nth-child(5) {animation-delay:180ms;}
+.shell-hero-lines {position:absolute;inset:0;width:100%;height:100%;z-index:-1;fill:none;stroke:var(--color-white);stroke-width:1.2;opacity:.45;stroke-dasharray:600;animation:shell-draw .8s var(--ease-out) both .1s;}
+@keyframes shell-draw {from {stroke-dashoffset:600;}}
+@keyframes shell-up {from {opacity:0;transform:translateY(12px);} to {opacity:1;transform:none;}}
+.shell-hero-row {display:flex;gap:8px;align-items:stretch;}
+.shell-hero-side.shell-hero-side {flex:none;width:56px;min-height:200px;border-radius:var(--radius-hero);background:var(--color-mint);color:var(--color-green);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font:700 14px/1 var(--font-app);animation:shell-up .35s var(--ease-out) both 80ms;}
+.shell-hero-side span {writing-mode:vertical-rl;letter-spacing:.05em;}
+.shell-hero-side b {font-size:20px;font-weight:400;}
+.shell-hero-top {display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:26px;}
+.shell-hero.shell-hero .shell-hero-top > small {display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:999px;background:rgb(255 255 255 / 14%);color:#A8D4BB;font-size:13px;font-weight:700;}
+.shell-hero-badge {flex:none;}
+.shell-hero.shell-hero h2 {font-size:22px;font-weight:750;line-height:1.35;letter-spacing:-.065em;color:var(--color-onBrand);}
+.shell-hero-copy:empty {display:none;}
+.shell-hero-actions {margin-top:auto;}
+.shell-hero-copy {font-size:14px;line-height:1.5;}
+.shell-hero-actions {display:flex;gap:8px;}
+.shell-hero.shell-hero .shell-hero-actions > button:not(.shell-slide) {min-height:48px;padding:10px 14px;background:var(--color-white);color:var(--color-green);border-radius:999px;font-size:14px;font-weight:700;flex:1;}
+.shell-hero.shell-hero .shell-hero-actions > button.outlined {background:transparent;border:1.5px solid rgb(255 255 255 / 70%);color:var(--color-onBrand);}
+.shell-hero.shell-hero [role=switch] {align-items:center;height:30px;min-height:30px!important;width:52px;border-radius:20px;background:rgb(0 0 0 / 18%);padding:4px;display:flex;}
+.shell-hero [role=switch] i {width:22px;height:22px;background:var(--color-white);border-radius:50%;}
+.shell-hero [role=switch][aria-checked=true] {justify-content:flex-end;background:var(--color-brand);}
+.shell-hero [role=switch][aria-checked=true] i {background:var(--color-white);}
+.shell-section-head.shell-section-head {display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.shell-section-head.shell-section-head h2 {font-size:18px;font-weight:700;}
+.shell-section-head.shell-section-head button {font-size:14px;min-height:44px;white-space:nowrap;color:var(--color-body);}
+.shell-section {display:flex;flex-direction:column;gap:12px;animation:shell-up .3s var(--ease-out) both .25s;}
+.shell-list.shell-list {display:flex;flex-direction:column;gap:8px;width:100%;padding:14px;border:1px solid var(--color-border);border-radius:var(--radius-card);background:var(--color-white);text-align:left;box-shadow:var(--shadow-card);}
+.shell-list-title {font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.shell-list-description {font-size:14px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.shell-market {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+.shell-market > article {min-width:0;background:var(--color-white);border:1px solid var(--color-border);border-radius:var(--radius-card);box-shadow:var(--shadow-card);height:148px;padding:10px;display:flex;flex-direction:column;gap:4px;}
+.shell-market button {display:flex;flex-direction:column;width:100%;gap:4px;text-align:left;}
+.shell-market button > * {white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;}
+.shell-market button b {font-size:16px;font-weight:700;}
+.shell-market small {font-size:12px;}
+.shell-market-chart {height:40px;overflow:hidden;margin-top:auto;}
+.shell-market-change {font-weight:700;font-variant-numeric:tabular-nums;color:var(--color-body);}
+.shell-market-change.up {color:var(--color-priceUp);}
+.shell-market-change.down {color:var(--color-priceDown);}
+.shell-market .chart {height:40px;width:100%;}
+.shell-tabs.shell-tabs.shell-tabs {position:relative;inset:auto;margin:0;align-items:stretch;border:0;width:100%;height:calc(76px + env(safe-area-inset-bottom,0px));min-height:calc(76px + env(safe-area-inset-bottom,0px));padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));display:flex;flex:none;border-top:0;border-radius:24px 24px 0 0;padding-inline:12px!important;box-shadow:0 -4px 20px rgb(20 40 20 / 6%);background:var(--color-white);z-index:10;align-items:center;}
+.shell-tabs.shell-tabs.shell-tabs button {display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;flex:1;min-width:0;height:100%;min-height:44px;padding:0;color:var(--color-body);font:400 12px/1.2 var(--font-app);}
+.shell-tabs.shell-tabs.shell-tabs button[aria-current=page] {color:var(--color-green);font-weight:700;}
+.shell-tabs.shell-tabs .tab-icon {display:block;width:24px;height:24px;background:currentColor;mask-size:contain;mask-repeat:no-repeat;}
+.shell-tabs.shell-tabs img,.shell-tabs.shell-tabs .vector-icon {width:24px;height:24px;}
+.shell-tabs.shell-tabs .bottom-nav__label {font:inherit;color:inherit;}
+.shell-seller {display:flex;flex-direction:column;height:100%;background:var(--color-background);font-family:var(--font-app);}
+.shell-home.shell-home .app-card {background:var(--color-white);border:1px solid var(--color-border);border-radius:var(--radius-card);box-shadow:var(--shadow-card);}
+
+.shell-home.shell-home {line-height:1.4;}
+
+.buyer .shell-hero {min-height:220px;}
+
+@media (prefers-reduced-motion: reduce) {
+ .shell-hero,.shell-hero > *,.shell-hero-lines,.shell-hero-side,.shell-stats > *,.shell-section {animation:none!important;}
+}
+.shell-profile.shell-profile {width:44px;height:44px;min-height:44px;border-radius:50%;background:transparent;color:var(--color-onBrand);display:grid;place-items:center;}
+.shell-profile .tab-icon {display:block;width:22px;height:22px;background:currentColor;mask-size:contain;mask-repeat:no-repeat;}
+
+/* HW 하윤 타이포: Noto Sans KR 가변, 제목 자간 -0.065em·굵기 750, 숫자 자릿수 고정, 보조 글씨 12px #55645B */
+.app {font-variant-numeric:tabular-nums;font-optical-sizing:auto;font-synthesis:none;color:var(--color-ink);}
+.app :is(h1,h2,h3) {letter-spacing:-.065em;}
+.app .tab-heading h1,.app .top-bar h1 {font-size:22px;font-weight:750;line-height:1.35;color:var(--color-title);}
+.shell-section-head.shell-section-head h2,.shell-ai-head h2 {font-size:16px;font-weight:700;letter-spacing:-.6px;color:var(--color-title);}
+.shell-section-head.shell-section-head button {font-size:12px;color:var(--color-body);}
+.shell-hero.shell-hero .shell-hero-copy {font-size:13px;color:#CFE7DA;}
+.shell-stats.shell-stats > * > span {font-size:12px;}
+.shell-stats.shell-stats b {font-size:15px;font-weight:700;letter-spacing:-.6px;color:#314C3E;}
+.shell-market button b {font-size:19px;font-weight:700;letter-spacing:-.9px;color:#314C3E;}
+.shell-market small {font-size:12px;color:var(--color-body);}
+.shell-list-title {font-size:15px;font-weight:700;color:#3A5142;letter-spacing:-.6px;}
+.shell-list-description {font-size:12px;color:var(--color-body);}
+.shell-tabs.shell-tabs.shell-tabs button {font-size:11px;color:#5D6D63;}
+.shell-tabs.shell-tabs.shell-tabs button[aria-current=page] {color:var(--color-green);}
+
+/* 장바구니 수 배지: 아이콘 오른쪽 위 */
+.shell-tabs.shell-tabs.shell-tabs button {position:relative;}
+.shell-tabs .cart-count {position:absolute;top:2px;left:calc(50% + 6px);min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:#E5484D;color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center;}
