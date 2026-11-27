@@ -1,6 +1,9 @@
 // 사업장에서 많이 나오는 재활용 폐기물 7종(폐기물 코드)과 품목별 주 재질.
 // 판매 등록(주 재질 고르기)과 판매자 가입, 회사 정보(나오는 부산물)가 함께 쓴다
 export const BYPRODUCT_ITEMS = [
+  { code: '51-03-08', name: '폐어망 (그물)', materials: ['나일론', 'PE', 'PP'] },
+  { code: '51-03-05', name: '양식용 폐부자', materials: ['EPS'] },
+  { code: '51-03-06', name: '폐스티로폼 (부표)', materials: ['EPS'] },
   { code: '51-03-01', name: '폐합성수지 (플라스틱)', materials: ['PP', 'PE', 'PET', 'ABS', 'PS'] },
   { code: '51-29-01', name: '고철', materials: ['철', '주물'] },
   { code: '51-29-02', name: '비철금속', materials: ['알루미늄', '구리', '황동', '스테인리스'] },

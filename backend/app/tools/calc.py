@@ -28,7 +28,7 @@ def canon_material(name: str) -> str:
 
 
 # 표준 재질명 → data/prices.json 품목. 표에 없는 재질은 시세 없음(null). 시세 비교(pricing)와 판매 화면의 시세(market)가 같은 표를 쓴다.
-MATERIAL_PRICE_ITEM = {"pp": "PP 압축", "pe": "PE 압축", "pet": "PET 압축",
+MATERIAL_PRICE_ITEM = {"pp": "PP 압축", "pe": "PE 압축", "pet": "PET 압축", "eps": "EPS 잉고트",
                        "철": "철스크랩", "알루미늄": "알루미늄캔", "골판지": "폐골판지", "신문지": "폐신문지"}
 
 

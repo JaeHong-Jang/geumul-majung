@@ -74,6 +74,11 @@ CHECK_TEXT = {
     "seller_transport": {None: "판매자가 직접 운송, 인계서 운반자 칸도 판매자가 입력"},
     "handover_entry": {None: "인계서는 배출자, 운반자, 처리자가 올바로에 각자 입력, 앱은 입력값 정리만 담당"},
 }
+# 폐어구는 보통 생활폐기물이라 운반 자격과 인계서 안내가 다르다(regulation.GEAR_CODES)
+GEAR_CHECK_TEXT = {
+    "seller_transport": "폐어구 운반은 폐기물처리 신고나 수집, 운반업 허가를 갖춘 자만 가능. 운반자 자격 확인 필요",
+    "handover_entry": "생활폐기물로 배출되면 전자인계서 대상 아님, 사업장폐기물이면 올바로 입력. 배출 지자체에 확인 필요",
+}
 
 
 @router.get("/orders/{order_id}/checklist")
@@ -90,7 +95,7 @@ def order_checklist(order_id: int, me: Company = Depends(current_company), sessi
     if reg:
         for c, meta in zip(reg.claims, reg.data.get("checklist", [])):    # 주장 3개와 checklist 3개는 같은 순서. 게이트에 막힌 주장은 뺀다
             if not c.blocked:
-                items.append({"item": meta["item"], "ok": meta["ok"], "text": CHECK_TEXT[meta["item"]][meta["ok"]], "detail": c.text,
+                items.append({"item": meta["item"], "ok": meta["ok"], "text": (meta.get("gear") and GEAR_CHECK_TEXT.get(meta["item"])) or CHECK_TEXT[meta["item"]][meta["ok"]], "detail": c.text,
                               "laws": [{"ref": e.ref, "label": e.label} for e in c.evidence if e.kind == "law"]})
     return {"items": items, "legal_note": LEGAL_NOTE}
 

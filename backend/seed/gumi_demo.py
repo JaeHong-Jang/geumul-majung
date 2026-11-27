@@ -30,37 +30,45 @@ RECYCLER_INFO = {"가상리사이클": ("방문 수거 또는 입고", "현금 �
                  "가상리사이클B": ("입고만 가능", "세금계산서 발행 거래")}
 
 
-def seed(password: str | None = None, operator_password: str | None = None) -> dict:
+def seed(password: str | None = None, operator_password: str | None = None, companies=None, addresses=None,
+         recycler_info=None, regions=None) -> dict:
     """가상 회사를 넣는다. password를 주면 사업자번호를 login_id로 하는 계정도 만든다.
     운영자는 공통 비밀번호를 쓰지 않는다(operator_password가 없으면 운영자 계정은 만들지 않음)."""
+    companies, addresses = companies or COMPANIES, addresses or ADDRESSES            # 다른 지역 시드(seed.boryeong_demo)가 같은 함수를 쓴다
+    recycler_info, regions = RECYCLER_INFO if recycler_info is None else recycler_info, regions or {}
     Base.metadata.create_all(engine)
     ids = {}
     with SessionLocal() as s:
-        for name, role, biz, lat, lon, permit, codes, industry in COMPANIES:
+        for name, role, biz, lat, lon, permit, codes, industry in companies:
             c = Company(name=name, role=role, biz_no=biz, lat=lat, lon=lon, permit_no=permit,
-                        permit_codes=codes, industry=industry, verified=True, region="경북 구미",   # 데모라 허가 확인 끝난 상태
-                        address=ADDRESSES[name], coord_source="seed")
-            if name in RECYCLER_INFO:
-                c.pickup_method, c.terms = RECYCLER_INFO[name]
+                        permit_codes=codes, industry=industry, verified=True, region=regions.get(name, "경북 구미"),   # 데모라 허가 확인 끝난 상태
+                        address=addresses[name], coord_source="seed")
+            if name in recycler_info:
+                c.pickup_method, c.terms = recycler_info[name]
             s.add(c)
             s.flush()
             ids[name] = c.id
             account_password = operator_password if role == "operator" else password
             if role == "recycler":
-                s.add(Address(company_id=c.id, label="본사 공장", address=ADDRESSES[name], is_default=True))
+                s.add(Address(company_id=c.id, label="본사 공장", address=addresses[name], is_default=True))
             if account_password:
                 s.add(Credential(company_id=c.id, login_id=biz, password_hash=hash_password(account_password)))
         s.commit()
     return ids
 
 
-if __name__ == "__main__":
+def main(companies=None, **kw) -> None:
+    companies = companies or COMPANIES
     demo_password = os.environ.get("SEED_PASSWORD") or secrets.token_urlsafe(12)
     if len(demo_password) < 16:
         sys.exit("SEED_PASSWORD는 16자 이상이어야 함")
     operator_password = secrets.token_urlsafe(24)
-    logins = {name: biz for name, _, biz, *_ in COMPANIES}
-    for name, cid in seed(demo_password, operator_password).items():
+    logins = {name: biz for name, _, biz, *_ in companies}
+    for name, cid in seed(demo_password, operator_password, companies, **kw).items():
         print(f"{name}: id={cid}  login_id={logins[name]}")
     print(f"공통 비밀번호(운영자 제외, 데모 전용): {demo_password}")
     print(f"운영자 비밀번호(다른 사람에게 주지 말 것): {operator_password}")
+
+
+if __name__ == "__main__":
+    main()

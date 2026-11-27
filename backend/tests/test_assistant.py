@@ -216,11 +216,11 @@ def test_saved_agent_run_has_no_question_text(client, monkeypatch):
     assert "ZEBRA7731" not in dumped and "010-9999-8888" not in dumped
 
 
-# ── law_articles.json 23개 전부가 게이트를 통과하는지 ──
+# ── law_articles.json 57개 전부가 게이트를 통과하는지 ──
 def test_every_law_article_passes_gates_as_fact():
     from app.agents.assistant import ID
     laws = load_json("law_articles.json")
-    assert len(laws) == 23
+    assert len(laws) == 57
     claims = [claim(ID, f"{a['law']} {a['article']}: {a['title']}. {a['summary']}", "fact", ev("law", a["id"], "")) for a in laws]
     public, blocked = apply_gates(claims)
     stuck = {c.evidence[0].ref: c.block_reasons for c in claims if c.blocked}
@@ -350,5 +350,5 @@ def test_law_fact_has_headline_plain_text_and_source(client, monkeypatch):
     w = world(client)
     use_llm(monkeypatch, MockProvider(echo_facts))
     fact = chat(client, w["f"], "PVC는 어떻게 버려야 해").json()["facts"][0]
-    assert fact["headline"] == "태워서 열을 얻는 재활용(R-8-2)에서 PVC 제외"
+    assert fact["headline"] == "태워서 열을 얻는 재활용은 PVC가 아닌 것만"
     assert "R-8-2" in fact["detail"] and fact["evidence"][0]["ref"] == "wma-rule-annex5-3-R-8-2"

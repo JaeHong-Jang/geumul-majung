@@ -1,0 +1,159 @@
+[
+ {
+  "name": "한울메탈",
+  "region": "울산 울주군",
+  "address": "울산광역시 울주군 삼동면 사촌신복로 359-14",
+  "lat": 35.52,
+  "lng": 129.13,
+  "accepts": [
+   "폐어망(51-03-08)",
+   "폐발포합성수지(51-03-06)",
+   "폐폴리우레탄폼류(51-03-04)",
+   "폐유리섬유(51-30-04)",
+   "폐판넬"
+  ],
+  "method": "중간재활용(이물 분리 후 압축, 납품)",
+  "capacity": "처리량 미공개. 허용보관량 453.08㎥(117.87톤)",
+  "conditions": "공개 기준 없음. 견적 문의 시 물량(톤백·차량 대수), 차량 진입 가능 여부, 상차 위치 필요",
+  "permit": "폐기물 중간재활용업 제 울주-중간-91호(R-10), 울산 울주군수, 2024-03-20",
+  "url": "https://hanul-metal.com/business",
+  "verify": "열람(2026-11-26). 좌표는 추정"
+ },
+ {
+  "name": "넷스파",
+  "region": "부산 강서구",
+  "address": null,
+  "lat": 35.13,
+  "lng": 128.87,
+  "accepts": [
+   "폐어망(나일론 주재질, PP·PE 혼합)"
+  ],
+  "method": "물질재활용(파쇄·세척 전처리, 재생 나일론·재생 폴리올레핀 생산)",
+  "capacity": "보도별 상이: 월 240톤(2022-03), 연 약 4,000톤 처리(2022), 재생 나일론 연 2,400톤 전망(2023-01)",
+  "conditions": null,
+  "permit": null,
+  "url": "https://www.etnews.com/20220325000117",
+  "verify": "열람(기사). 소재지는 '부산 자원순환특화단지 내'까지만 확인. 도로명주소·허가·반입조건 못 찾음. 좌표는 단지 위치 추정"
+ },
+ {
+  "name": "포어시스",
+  "region": "경북 경주시",
+  "address": null,
+  "lat": null,
+  "lng": null,
+  "accepts": [
+   "폐어망",
+   "폐로프",
+   "PA6",
+   "PE",
+   "PP",
+   "PET"
+  ],
+  "method": "물질재활용(재질 선별, 다중 초음파 세척으로 염분·토사·중금속 제거, 플레이크·펠릿)",
+  "capacity": "연 3,500톤(2024-07 보도) ~ 3,600톤(2024-11, 2026-11 보도)",
+  "conditions": "공개 기준 없음. 전처리 전 재질 혼입 방지 관리 언급",
+  "permit": null,
+  "url": "https://www.etnews.com/20241107000243",
+  "verify": "열람(기사). 공장 도로명주소·허가 못 찾음(홈페이지 403)"
+ },
+ {
+  "name": "효성티앤씨 울산공장",
+  "region": "울산",
+  "address": null,
+  "lat": null,
+  "lng": null,
+  "accepts": [
+   "전처리된 폐어망(나일론)"
+  ],
+  "method": "화학적 재활용(해중합, 재생 나일론 원사)",
+  "capacity": "해중합 설비 연산 3,600톤(2022-12 가동 보도)",
+  "conditions": null,
+  "permit": null,
+  "url": "https://news.tf.co.kr/read/ogmeta/1988825.htm",
+  "verify": "검색요약. 섬 집하장 물량의 직접 반입처인지 미확인"
+ },
+ {
+  "name": "LG화학 당진공장(열분해유)",
+  "region": "충남 당진시",
+  "address": "충남 당진시 석문국가산업단지(지번 미확인)",
+  "lat": 36.99,
+  "lng": 126.6,
+  "accepts": [
+   "넷스파가 선별·가공한 해양폐기물 플라스틱(MOU)"
+  ],
+  "method": "화학적 재활용(초임계 열분해)",
+  "capacity": "열분해유 연 2만 톤 계획",
+  "conditions": null,
+  "permit": null,
+  "url": "https://www.lg.co.kr/media/release/26080",
+  "verify": "검색요약. 폐어망 직접 반입처 아님. 현재 가동·공급 여부 미확인. 좌표는 산단 위치 추정"
+ },
+ {
+  "name": "일신케미컬",
+  "region": "경기 김포시",
+  "address": null,
+  "lat": null,
+  "lng": null,
+  "accepts": [
+   "세척된 폐어망·폐로프 PE",
+   "PP"
+  ],
+  "method": "물질재활용(분쇄, 펠릿)",
+  "capacity": null,
+  "conditions": null,
+  "permit": null,
+  "url": "https://futurechosun.com/archives/74223",
+  "verify": "열람(2023-03-30 기사 1건). 주소·허가 못 찾음"
+ },
+ {
+  "name": "한수풀환경산업",
+  "region": "제주",
+  "address": null,
+  "lat": null,
+  "lng": null,
+  "accepts": [
+   "폐어망",
+   "폐로프"
+  ],
+  "method": "선별(PE·PP 분리)",
+  "capacity": null,
+  "conditions": null,
+  "permit": null,
+  "url": "https://futurechosun.com/archives/74223",
+  "verify": "열람(2023-03-30 기사 1건). 주소·허가 못 찾음"
+ },
+ {
+  "name": "동양제강",
+  "region": null,
+  "address": null,
+  "lat": null,
+  "lng": null,
+  "accepts": [
+   "폐로프(PP)"
+  ],
+  "method": "물질재활용(재생 PP 원료, 재생로프)",
+  "capacity": null,
+  "conditions": null,
+  "permit": null,
+  "url": "http://www.newstomato.com/ReadNews.aspx?no=1305317",
+  "verify": "검색요약(원문 열람 실패)"
+ },
+ {
+  "name": "현창에코",
+  "region": "충남 예산군",
+  "address": null,
+  "lat": 36.68,
+  "lng": 126.85,
+  "accepts": [
+   "폐로프",
+   "폐어망",
+   "안전망"
+  ],
+  "method": "재활용(공제조합 회원 품목 기준)",
+  "capacity": "미공개",
+  "conditions": "공개 기준 없음",
+  "permit": "미확인",
+  "url": "https://koprc.co.kr/kor/member/0202.php",
+  "verify": "공제조합 회원 명단 열람(2026-11-27). 주소·좌표는 군 중심 추정, 반입 조건 미확인"
+ }
+]

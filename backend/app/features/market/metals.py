@@ -7,7 +7,8 @@ from app.tools.data import load_json
 # 최소 함량 × 기준 금속 가격은 정렬에만 쓴다(황동 구리 60%, 스테인리스 304 니켈 8%)
 BRASS = ("구리", 0.6, "황동은 구리 약 60~70% 합금이라 매입가는 구리 가격보다 크게 낮음")
 STAINLESS = ("니켈", 0.08, "스테인리스는 니켈 약 8~10% 합금이라 매입가는 니켈 가격보다 크게 낮음")
-METAL_OF = {"구리": ("구리", 1.0, None), "동": ("구리", 1.0, None),
+METAL_OF = {"구리": ("구리", 1.0, None), "동": ("구리", 1.0, None), "납": ("납", 1.0, None),   # 납: 자망 발줄의 납추, 봉돌
+           
             "황동": BRASS, "신주": BRASS, "스테인리스": STAINLESS, "스텐": STAINLESS, "sus": STAINLESS}
 
 
@@ -24,6 +25,6 @@ def metal_reference(material: str) -> dict | None:
     basis = (f"국제 {metal} 가격 {last['month']} 월평균 {fmt(last['usd_per_ton'])}달러/톤 × {fmt(last['krw_per_usd'])}원/달러 "
              f"= 약 {fmt(round(last['krw_per_kg']))}원/kg, 정련 금속 가격이라 스크랩 매입가는 순도와 상태에 따라 이보다 낮음")
     return {"item": f"국제 {metal} 가격", "metal": metal, "category": "국제 금속", "price": round(last["krw_per_kg"]), "unit": "원/kg",
-            "date": last["month"], "source_id": "D3-METAL", "intl": True, "alloy": bool(alloy), "sort_price": round(last["krw_per_kg"] * share),
+            "date": last["month"], "source_id": last.get("source", "D3-METAL"), "intl": True, "alloy": bool(alloy), "sort_price": round(last["krw_per_kg"] * share),
             "change_pct": round((last["usd_per_ton"] / prev - 1) * 100, 1) if prev else None,
             "basis": f"{alloy}. {basis}" if alloy else basis}

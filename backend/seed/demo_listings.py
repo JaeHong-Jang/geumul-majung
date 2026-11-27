@@ -49,7 +49,7 @@ def list_bags(c: httpx.Client, headers: dict, code: str, target: str, bags: list
     return ids
 
 
-def trade(c: httpx.Client, password: str, spec: tuple, number: int) -> None:
+def trade(c: httpx.Client, password: str, spec: tuple, number: int, method: str = "선별, 세척 후 재생 원료화") -> None:
     """등록 → 주문 → 판매자 출고 → 구매자 도착 확인과 검사 합격 → 인계서 → 후기까지 API로만 진행한다(운송은 판매자)."""
     login_id, code, target, price, bags = spec
     seller, buyer = login(c, login_id, password), login(c, RECYCLER, password)
@@ -61,21 +61,21 @@ def trade(c: httpx.Client, password: str, spec: tuple, number: int) -> None:
     post(c, f"/v1/orders/{order}/inspect", buyer, {**weights, "passed": True})
     post(c, f"/v1/orders/{order}/handover/emitter", seller, {})
     post(c, f"/v1/orders/{order}/handover/carrier", seller, {"vehicle_no": "00가 0000"})
-    post(c, f"/v1/orders/{order}/handover/processor", buyer, {"method": "선별, 세척 후 재생 원료화"})
+    post(c, f"/v1/orders/{order}/handover/processor", buyer, {"method": method})
     post(c, f"/v1/orders/{order}/handover/number", seller, {"allbaro_no": f"DEMO-{number:04d}"})   # 가상 번호
     for who, target_role, score in ((buyer, "factory", 5), (seller, "recycler", 5)):
         post(c, "/v1/ratings", who, {"order_id": order, "target": target_role, "score": score})
     print(f"시연 거래 {order}: {code} {target} 정산 완료")
 
 
-def main(base: str, password: str) -> None:
+def main(base: str, password: str, listings=None, trades=None) -> None:
     with httpx.Client(base_url=base, timeout=60) as c:
-        for login_id, code, target, price, bags in LISTINGS:
+        for login_id, code, target, price, bags in listings or LISTINGS:
             headers = login(c, login_id, password)
             bag_ids = list_bags(c, headers, code, target, bags)
             got = post(c, "/v1/listings", headers, {"bag_ids": bag_ids, "mode": "now", "price_krw_per_kg": price})
             print(f"매물 {got['id']}: {code} {target} {got['grade']}등급 {got['total_kg']}kg {price}원/kg")
-        for number, spec in enumerate(TRADES, start=1):
+        for number, spec in enumerate(trades or TRADES, start=1):
             trade(c, password, spec, number)
 
 

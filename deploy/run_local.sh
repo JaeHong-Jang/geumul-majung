@@ -54,7 +54,8 @@ export ALLOW_SIGNUP=1 AUTO_APPROVE_SIGNUP=1 DEMO_LOGIN=1
 
 cd "$ROOT/backend" || exit 1
 
-# 처음 한 번만 시연 회사를 넣는다.
+# 처음 한 번만 시연 회사를 넣는다. 기본은 보령 폐어구(그물마중), SEED_SET=gumi면 이전 구미 공장 시연.
+if [ "${SEED_SET:-boryeong}" = "gumi" ]; then SEED_MODULE=seed.gumi_demo; LISTING_MODULE=seed.demo_listings; else SEED_MODULE=seed.boryeong_demo; LISTING_MODULE=seed.boryeong_demo; fi
 SEEDED="$("$PY" - <<'E'
 from sqlalchemy import inspect, text
 from app.db.models import Base
@@ -66,7 +67,7 @@ E
 )"
 if [ "$SEEDED" = "0" ]; then
   umask 077
-  "$PY" -m seed.gumi_demo > "$HOME_DIR/accounts.txt" 2>&1 || { cat "$HOME_DIR/accounts.txt"; exit 1; }
+  "$PY" -m "$SEED_MODULE" > "$HOME_DIR/accounts.txt" 2>&1 || { cat "$HOME_DIR/accounts.txt"; exit 1; }
   NEED_LISTINGS=1
 else
   NEED_LISTINGS=0
@@ -80,7 +81,7 @@ for _ in $(seq 1 80); do
   sleep 0.25
 done
 if [ "$NEED_LISTINGS" = "1" ]; then
-  "$PY" -m seed.demo_listings "http://127.0.0.1:${PORT:-8000}" "$SEED_PASSWORD"
+  "$PY" -m "$LISTING_MODULE" "http://127.0.0.1:${PORT:-8000}" "$SEED_PASSWORD"
 fi
 echo "실행 중: http://localhost:${PORT:-8000}/  (계정: $HOME_DIR/accounts.txt)"
 wait $SERVER
