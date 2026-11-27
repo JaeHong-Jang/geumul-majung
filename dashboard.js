@@ -62,7 +62,11 @@
   const nf = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 3 });
   const tons = (number) => nf.format(number);
   const money = (value) => Math.round(value).toLocaleString("ko-KR") + "원";
-  window.NetUI = { icon: svg, esc, money, tons };
+  const when = (value) => {
+    const p = dateParts(value);
+    return p.short + " (" + p.day + ") " + p.time;
+  };
+  window.NetUI = { icon: svg, esc, money, tons, when };
   document
     .querySelectorAll("[data-icon]")
     .forEach((el) => el.replaceWith(iconNode(el.dataset.icon)));
@@ -156,6 +160,11 @@
   function toast(msg) {
     clearTimeout(toastTimer);
     $("toast").textContent = msg;
+    // 열린 dialog 위에 보이도록 top layer로 다시 올린다
+    if ($("toast").showPopover) {
+      if ($("toast").matches(":popover-open")) $("toast").hidePopover();
+      $("toast").showPopover();
+    }
     $("toast").classList.add("show");
     toastTimer = setTimeout(() => $("toast").classList.remove("show"), 2600);
   }
@@ -228,7 +237,10 @@
     const feature = next
       ? '<div class="hero"><div class="hero-body"><div class="hero-tag">' +
         svg("ship", 15) +
-        '다음 반출 일정</div><h2>삽시도 <span>→</span> 대천항</h2><p class="hero-meta">' +
+        (next.departure.slice(0, 10) === model.DEMO_DATE
+          ? "오늘 반출 · 검수 대기"
+          : "다음 반출 일정") +
+        '</div><h2>삽시도 <span>→</span> 대천항</h2><p class="hero-meta">' +
         svg("calendar", 16) +
         "<span>" +
         when.short +
@@ -480,6 +492,19 @@
         break;
       case "help":
         $("guide").showModal();
+        break;
+      case "reset":
+        try {
+          Object.keys(localStorage)
+            .filter((key) => key.startsWith(storagePrefix))
+            .forEach((key) => localStorage.removeItem(key));
+        } catch {
+          // 저장소를 못 쓰는 환경이면 지울 기록도 없다
+        }
+        $("guide").close();
+        loadRecords();
+        render();
+        toast("시연 데이터를 처음 상태로 되돌렸습니다.");
         break;
       case "all":
         goList();

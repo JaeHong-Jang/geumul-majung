@@ -217,7 +217,7 @@
         step: "0.001",
       }),
       numericField("마대 수 (개)", "bags", "", { min: 1 }),
-      field("출항 예정 일시", "departure", "2026-11-29T09:00", {
+      field("출항 예정 일시", "departure", model().DEMO_DATE + "T13:00", {
         type: "datetime-local",
       }),
       field("지정 처리업체", "facility", demoFacility, { maxLength: 70 }),
@@ -298,7 +298,7 @@
   function shipmentSummary(record) {
     return (
       description([
-        ["반출 예정", record.departure.replace("T", " ")],
+        ["반출 예정", window.NetUI.when(record.departure)],
         ["예상 반출량", `${weight(record.weight)} · ${record.bags}마대`],
         ["어구 · 재질", `${record.kind} · ${record.material}`],
         ["지정 처리업체", record.facility],
@@ -342,7 +342,7 @@
       section("반출 정보", shipmentSummary(record)) +
       section(
         "지정 업체 인수 조건",
-        `<p class="sheet-note">같은 업체의 두 선별 조건입니다. 예상 총비용에 인수 톤당 운영료 ${amount(record.feeRate)}가 포함됩니다. 초깃값은 시연용 가정입니다.</p>
+        `<p class="sheet-note">같은 업체의 두 선별 조건입니다. 예상 총비용에 인수 톤당 운영료 ${amount(record.feeRate)}이 포함됩니다. 초깃값은 시연용 가정입니다.</p>
       <div class="quote-comparison" data-comparison aria-live="polite"></div><div class="quote-grid">${record.quotes.map(quoteCard).join("")}</div>`,
       );
     function saveQuotes(form, confirm) {
@@ -479,6 +479,19 @@
         kicker: `${record.id} · ${statusNames[record.status]}`,
         title: "반출 정산서",
         body: header + summary + section("정산 내역", resultRows(totals)),
+      });
+      return;
+    }
+    if (record.departure.slice(0, 10) > model().DEMO_DATE) {
+      show({
+        kicker: `${record.id} · ${statusNames[record.status]}`,
+        title: "출항 대기",
+        body:
+          header +
+          section(
+            "검수 입력 전",
+            `<p class="sheet-note">${esc(window.NetUI.when(record.departure))} 출항 후 대천항에서 하선·계량을 마치면 실제 인수량을 입력합니다.</p>`,
+          ),
       });
       return;
     }

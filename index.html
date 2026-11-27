@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#12594e" />
+    <meta name="theme-color" content="#044a67" />
     <title>그물마중 · 반출 운영 현황</title>
     <link rel="stylesheet" href="style.css" />
     <script defer src="model.js"></script>
@@ -135,10 +135,13 @@
           >
         </p>
         <form method="dialog">
+          <button type="button" class="btn btn-secondary" data-action="reset">
+            시연 데이터 초기화
+          </button>
           <button class="btn btn-primary">닫기</button>
         </form>
       </div>
     </dialog>
-    <div id="toast" role="status" aria-live="polite"></div>
+    <div id="toast" role="status" aria-live="polite" popover="manual"></div>
   </body>
 </html>

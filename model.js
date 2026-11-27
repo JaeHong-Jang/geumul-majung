@@ -181,6 +181,9 @@
       const actual = record.actual;
       if (!actual || typeof actual !== "object")
         throw new Error("실제 계량과 인수 결과를 입력해 주세요.");
+      // ponytail: 시연 기준일 고정, 현장용은 실제 하선 시각 기준으로 교체
+      if (departureDay > DEMO_DATE)
+        throw new Error("출항 전에는 검수·정산을 입력할 수 없습니다.");
       calculate(
         record,
         record.quotes[record.choice],
@@ -218,7 +221,7 @@
         material: "나일론",
         weight: 5,
         bags: 12,
-        departure: "2026-11-28T08:30",
+        departure: "2026-11-27T08:30",
         status: "confirmed",
         note: "로프 분리 후 그물을 마대별로 묶어 인계합니다.",
       },
@@ -289,7 +292,7 @@
     return lots.map((lot) =>
       verify({
         photo: null,
-        facility: "지정 재활용업체 A",
+        facility: "보령 지정 재활용업체 (가상)",
         actual: null,
         baseRate: 300000,
         feeRate: 40000,

@@ -86,6 +86,15 @@ test("확정한 기록에 검수증빙이 있어야 정산을 완료한다", () 
     () => model.verify({ ...lot, status: "registered", choice: null }),
     /검수 완료/,
   );
+  assert.throws(
+    () =>
+      model.verify({
+        ...lot,
+        departure: "2026-11-28T08:30",
+        quotes: lot.quotes.map((q) => ({ ...q, validUntil: "2026-11-28" })),
+      }),
+    /출항 전/,
+  );
 });
 
 test("오프라인 브라우저용 전역 API와 독립된 시연 데이터, 중복 없는 반출번호를 제공한다", () => {
@@ -98,7 +107,8 @@ test("오프라인 브라우저용 전역 API와 독립된 시연 데이터, 중
   const lots = model.seed();
   assert.equal(lots.length, new Set(lots.map((r) => r.id)).size);
   assert.equal(lots.filter((r) => r.status === "settled").length, 2);
-  assert.equal(lots[0].departure, "2026-11-28T08:30");
+  assert.equal(lots[0].departure, "2026-11-27T08:30");
+  assert.equal(lots[0].facility, "보령 지정 재활용업체 (가상)");
   assert.equal(model.allocateId(lots), "SS-2611-007");
   assert.equal(model.allocateId(lots, "2026-12-01"), "SS-2612-001");
   lots[0].quotes[1].rate = 1;
