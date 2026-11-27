@@ -15,7 +15,10 @@
 
   // ── 저장소 ──
   let items,
-    warn = false;
+    warn = false,
+    online = false, // 서버(gm-api.js)에 붙었는지. 아니면 기기 저장소
+    aiOn = { stt: false, vision: false }; // 서버의 AI 기능 사용 가능 여부(/ai/status)
+  const checkCache = {}; // 반출번호 → 법·현장 점검 결과(화면을 다시 그려도 유지)
   try {
     items = JSON.parse(localStorage.getItem(KEY) || "null");
     items?.forEach(M.verify);
@@ -32,10 +35,29 @@
   const find = (id) => items.find((r) => r.id === id);
   function save(r) {
     M.verify(r);
+    const old = find(r.id);
     const i = items.findIndex((x) => x.id === r.id);
     if (i < 0) items.unshift(r);
     else items[i] = r;
-    persist();
+    if (online) sync(old, r);
+    else persist();
+  }
+  // 화면은 바로 바꾸고 서버 저장은 뒤따른다. 서버가 거절하면 서버 기록으로 되돌린다.
+  function sync(old, r) {
+    window.GmServer.push(old, r)
+      .then((rec) => {
+        items = items.map((x) => (x.id === r.id ? rec : x));
+        if (rec.id !== r.id && location.hash === "#/s/" + r.id)
+          location.replace("#/s/" + rec.id);
+        render();
+      })
+      .catch(async (e) => {
+        toast("서버 저장 실패, " + e.message);
+        try {
+          items = await window.GmServer.list();
+        } catch {}
+        render();
+      });
   }
 
   // ── 형식 ──
@@ -104,6 +126,39 @@
       <div class="pills">${pill("고객 " + man(t.savings), t.savings)}${pill("팀 " + man(t.margin), t.margin)}</div></div></a>`;
   }
 
+  // ── 그래프 ──
+  // 색: 단계 배지와 같은 색. 정산 완료는 인수(진한 회청)·잔재(옅은 회청)로 나눔
+  const TONE = {
+    registered: "var(--sand)",
+    confirmed: "var(--sea)",
+    settled: "var(--c-settled)",
+    residual: "var(--c-residual)",
+  };
+  // 손익분기 인수율(%) · 사업계획서 기준: 5톤 반출 1건, '로프 분리 후 인수' 조건(M.defaults 2안),
+  // 시연 기본 단가(M.seed). M.calculate는 인수량에 선형이므로 인수 0톤·전량 인수 두 점으로
+  // 고객 절감과 팀 공헌이익이 0이 되는 인수량을 각각 구해 큰 쪽을 씀 (2.75톤 / 5톤 = 55%)
+  const breakEven = (() => {
+    const t = 5,
+      r = M.seed()[0],
+      q = M.defaults(t, M.DEMO_DATE)[1];
+    const zero = (key) => {
+      const a = M.calculate(r, q, t, 0)[key],
+        b = M.calculate(r, q, t, t)[key];
+      return (-a / (b - a)) * t;
+    };
+    return (Math.max(zero("savings"), zero("margin")) / t) * 100;
+  })();
+  const amt = (v) => nf(3).format(v);
+  // 한 줄 구성 막대 + 이름·값 범례
+  const parts = (list, unit) => {
+    const shown = list.filter(([, v]) => v > 0);
+    return `<div class="split" role="img" aria-label="${list.map(([n, v]) => n + " " + amt(v) + unit).join(", ")}">${
+      shown.length
+        ? shown.map(([, v, c]) => `<i style="flex:${v};--tone:${c}"></i>`).join("")
+        : `<i style="flex:1;--tone:var(--line)"></i>`
+    }</div><ul class="kpi-key">${list.map(([n, v, c]) => `<li><i style="--tone:${c}"></i>${n}<b>${amt(v)}${unit}</b></li>`).join("")}</ul>`;
+  };
+
   // ── 운영 현황 ──
   function home() {
     const settled = items.filter((r) => r.status === "settled");
@@ -121,7 +176,8 @@
       (r) => r.status === "confirmed" && day(r.departure) === M.DEMO_DATE,
     ).length;
     const count = (st) => items.filter((r) => r.status === st).length;
-    const maxW = 6.5;
+    const weightOf = (st) =>
+      active.filter((r) => r.status === st).reduce((s, r) => s + r.weight, 0);
 
     let hero = "";
     if (next) {
@@ -134,18 +190,25 @@
         <div class="right"><small>예상 고객 절감</small><b>${man(t.savings)}</b></div></div>
         <div class="between"><span class="small">🕗 ${when(next.departure)}</span><span class="hero-cta">${next.status === "registered" ? "인수 조건 비교" : "검수·정산 입력"} →</span></div></div></a>`;
     }
-    const spark = (() => {
-      if (upcoming.length < 2) return "M0 30L140 30";
-      return upcoming
-        .map(
-          (r, i) =>
-            (i ? "L" : "M") +
-            ((i / (upcoming.length - 1)) * 140).toFixed(1) +
-            " " +
-            (36 - (r.weight / maxW) * 30).toFixed(1),
-        )
-        .join("");
-    })();
+    // 정산 건은 실계량(인수+잔재), 나머지는 예상 중량
+    const amountOf = (r) =>
+      r.status === "settled" ? r.actual.total : r.weight;
+    const step = Math.ceil(Math.max(6, ...items.map(amountOf)) / 3);
+    const scale = step * 3;
+    const gap = ratio * 100 - breakEven;
+    // 누적 인수율 링의 손익분기 눈금 (12시 방향에서 시계 방향)
+    const tick = (from, to) => {
+      const a = (breakEven / 100) * 2 * Math.PI,
+        x = (r) => (50 + r * Math.sin(a)).toFixed(1),
+        y = (r) => (50 - r * Math.cos(a)).toFixed(1);
+      return `M${x(from)} ${y(from)}L${x(to)} ${y(to)}`;
+    };
+    const pnl = settled.map((r) => ({ r, t: totals(r) })).filter((p) => p.t);
+    const wons = pnl.flatMap(({ t }) => [t.savings, t.margin]);
+    const lo = Math.min(0, ...wons),
+      span = Math.max(0, ...wons) - lo || 1;
+    const pnlBar = (name, v) =>
+      `<div class="pnl-row"><span>${name}</span><span class="pnl-track" style="--z:${((-lo / span) * 100).toFixed(1)}%"><i class="${v < 0 ? "neg" : ""}" style="left:${(((Math.min(v, 0) - lo) / span) * 100).toFixed(1)}%;width:${((Math.abs(v) / span) * 100).toFixed(1)}%"></i></span><b>${man(v)}</b></div>`;
     const kpi = (icon, title, value, d, unit, viz) =>
       `<div class="card kpi"><div class="tile-head"><span>${icon}</span>${title}</div><div class="num"><span data-count="${value}" data-d="${d}">${value.toFixed(d)}</span><small>${unit}</small></div>${viz}</div>`;
 
@@ -161,6 +224,7 @@
         <div class="node"><i class="sand">⌂</i><b>삽시도 집하장</b><small class="t-sand">${items.length - atSea - settled.length}건</small></div>
         <div class="node"><i class="sea">≋</i><b>해상 운반</b><small class="t-sea">${atSea}건</small></div>
         <div class="node"><i class="ocean">♻</i><b>재활용업체</b><small class="t-ocean">${settled.length}건</small></div></div></section>` +
+      circHome() +
       `<div class="grid2">` +
       kpi(
         "▣",
@@ -168,7 +232,14 @@
         items.length,
         0,
         "건",
-        `<div class="split">${["registered", "confirmed", "settled"].map((st) => `<i class="${st}" style="flex:${count(st)}"></i>`).join("")}</div>`,
+        parts(
+          ["registered", "confirmed", "settled"].map((st) => [
+            NAMES[st],
+            count(st),
+            TONE[st],
+          ]),
+          "건",
+        ),
       ) +
       kpi(
         "⚖",
@@ -176,7 +247,15 @@
         active.reduce((s, r) => s + r.weight, 0),
         1,
         "톤",
-        `<svg class="spark" viewBox="0 0 140 40" preserveAspectRatio="none"><path d="${spark}L140 40L0 40Z" class="area"/><path d="${spark}" class="line"/></svg>`,
+        `<span class="chip">대기 ${active.length}건</span>` +
+          parts(
+            ["registered", "confirmed"].map((st) => [
+              NAMES[st],
+              weightOf(st),
+              TONE[st],
+            ]),
+            "톤",
+          ),
       ) +
       kpi(
         "⤓",
@@ -184,15 +263,54 @@
         accepted,
         1,
         "톤",
-        `<div class="lolli">${settled.map((r) => `<i style="--h:${(r.actual.accepted / maxW) * 100}%"></i><i class="ghost" style="--h:${(r.actual.total / maxW) * 100}%"></i>`).join("")}</div>`,
+        `<span class="chip">정산 ${settled.length}건 계량 ${amt(total)}톤</span>` +
+          parts(
+            [
+              ["인수", accepted, TONE.settled],
+              ["잔재", total - accepted, TONE.residual],
+            ],
+            "톤",
+          ),
       ) +
-      `<div class="card kpi"><div class="tile-head"><span>%</span>누적 인수율</div><div class="gauge"><svg viewBox="0 0 100 100">${ring(ratio, "ocean", 40, 10)}</svg><b>${total ? (ratio * 100).toFixed(1) : "—"}</b></div></div>` +
+      `<div class="card kpi"><div class="tile-head"><span>%</span>누적 인수율</div><div class="gauge"><svg viewBox="0 0 100 100" role="img" aria-label="누적 인수율 ${(ratio * 100).toFixed(1)}%, 손익분기 ${breakEven.toFixed(0)}%">${ring(ratio, "ocean", 40, 10)}<path d="${tick(32, 48)}" stroke="#fff" stroke-width="5"/><path d="${tick(33, 47)}" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round"/></svg><b>${total ? (ratio * 100).toFixed(1) + "<small>%</small>" : "—"}</b></div><p class="kpi-note"><span><i></i>손익분기 ${breakEven.toFixed(0)}%</span>${total ? `<span><b>${gap < 0 ? "−" : "+"}${Math.abs(gap).toFixed(1)}%p</b> ${gap < 0 ? "미달" : "상회"}</span>` : ""}</p></div>` +
       `</div>` +
-      `<section class="card"><div class="sec-title"><div><h2>인수 구성</h2><p>정산 완료 반출의 실계량 기준</p></div></div>
-        <div class="rings"><div class="ringbox"><svg viewBox="0 0 100 100">${ring(ratio, "ocean", 44, 8)}${ring(total ? 1 - ratio : 0, "sand", 32, 7)}${ring(settled.length / Math.max(items.length, 1), "sea", 21, 6)}</svg><b>${Math.round(ratio * 100)}%</b></div>
-        <div class="legend"><div><i class="ocean"></i><span>인수 중량<b>${tons(accepted)}</b></span></div><div><i class="sand"></i><span>잔재 중량<b>${tons(Math.round((total - accepted) * 1000) / 1000)}</b></span></div><div><i class="sea"></i><span>정산 완료<b>${settled.length}/${items.length}건</b></span></div></div></div></section>` +
-      `<section class="card"><div class="sec-title"><div><h2>반출별 중량</h2><p>출항일 순 · 오늘 출항 강조</p></div><span class="chip">최대 6톤</span></div>
-        <div class="bars">${byDate.map((r, i) => `<a href="#/s/${esc(r.id)}" class="bar ${day(r.departure) === M.DEMO_DATE ? "today" : ""}" style="--h:${(r.weight / maxW) * 100}%;--i:${i}"><em>${tons(r.weight)}</em><i></i><small>${r.id.slice(-3)}</small></a>`).join("")}</div></section>` +
+      `<section class="card"><div class="sec-title"><div><h2>정산 건별 손익</h2><p>정산 완료 반출 기준</p></div><span class="chip">정산 ${settled.length}건</span></div><div class="pnl">${
+        pnl.length
+          ? pnl
+              .map(
+                ({ r, t }) =>
+                  `<a class="pnl-lot" href="#/s/${esc(r.id)}"><span class="pnl-head"><b class="mono">${esc(r.id)}</b><small>${esc(r.kind)} · ${short(r.departure)} · 인수율 ${Math.round(t.ratio)}%</small></span>${pnlBar("고객 절감", t.savings)}${pnlBar("팀 공헌이익", t.margin)}</a>`,
+              )
+              .join("")
+          : `<p class="muted">정산 완료 반출 없음</p>`
+      }</div></section>` +
+      `<section class="card"><div class="sec-title"><div><h2>반출별 중량</h2><p>출항일 순 · 정산 완료 건은 실계량</p></div></div>
+        <ul class="chart-key">${[
+          [NAMES.registered, TONE.registered],
+          [NAMES.confirmed, TONE.confirmed],
+          ["정산 완료 · 인수", TONE.settled],
+          ["정산 완료 · 잔재", TONE.residual],
+        ]
+          .map(([n, c]) => `<li><i style="--tone:${c}"></i>${n}</li>`)
+          .join("")}</ul>
+        <div class="bars"><div class="grid" aria-hidden="true">${[0, 1, 2, 3].map((k) => `<span style="--y:${((k / 3) * 100).toFixed(1)}%"><b>${amt(k * step)}${k === 3 ? "톤" : ""}</b></span>`).join("")}</div>${byDate
+          .map((r, i) => {
+            const w = amountOf(r),
+              segs =
+                r.status === "settled"
+                  ? [
+                      [r.actual.accepted, TONE.settled],
+                      [w - r.actual.accepted, TONE.residual],
+                    ]
+                  : [[w, TONE[r.status]]],
+              label = `${esc(r.id)} · ${NAMES[r.status]} · ${r.status === "settled" ? `계량 ${tons(w)} (인수 ${tons(r.actual.accepted)} · 잔재 ${tons(w - r.actual.accepted)})` : `예상 ${tons(w)}`}`,
+              today = day(r.departure) === M.DEMO_DATE;
+            return `<a href="#/s/${esc(r.id)}" class="bar ${today ? "today" : ""}" style="--h:${((w / scale) * 100).toFixed(1)}%;--i:${i}" aria-label="${label}" title="${label}"><span class="col">${segs
+              .filter(([v]) => v > 0)
+              .map(([v, c]) => `<i style="flex:${v};--tone:${c}"></i>`)
+              .join("")}</span><em>${tons(w)}</em><small>${today ? "오늘" : short(r.departure)}</small></a>`;
+          })
+          .join("")}</div></section>` +
       `<div class="sec-title pad"><h2>처리할 업무</h2></div><div class="grid2">` +
       [
         ["registered", "인수 조건 협의", "업체 조건 2안 비교", "sand", "📋"],
@@ -302,6 +420,175 @@
   const field = (label, name, value, type = "number", extra = "") =>
     `<label class="field"><span>${label}</span><input name="${name}" type="${type}" value="${esc(value)}" ${type === "number" ? 'inputmode="decimal" step="any" min="0"' : ""} ${extra}></label>`;
 
+  // ── AI 조각 (서버 모드일 때만) ──
+  const factList = (facts) =>
+    `<ul class="ai-facts">${facts.map((f) => `<li>${f.headline ? `<b>${esc(f.headline)}</b> ` : ""}${esc(f.text)}${f.detail ? `<details><summary>조문 보기</summary><p>${esc(f.detail)}</p></details>` : ""}</li>`).join("")}</ul>`;
+  function aiIntake() {
+    if (!online) return "";
+    const mic = aiOn.stt && navigator.mediaDevices?.getUserMedia && window.MediaRecorder;
+    return group(
+      "AI로 채우기",
+      `<label class="field"><span>말하거나 적은 내용</span><textarea id="ai-text" rows="2" maxlength="300" placeholder="예: 자망 나일론 5톤 마대 12개 다음 주 월요일 오전 8시 반 출항, 로프는 다 뗐음"></textarea></label>
+      <div class="ai-row">${mic ? `<button type="button" class="btn ghost" data-act="ai-rec" id="ai-rec">🎤 녹음</button>` : ""}<button type="button" class="btn ghost" data-act="ai-text">글로 채우기</button></div>
+      <div id="ai-out"></div>`,
+      "숫자는 말한 내용에서만 읽음, 못 읽은 칸은 직접 입력. 음성은 서버 안에서 글로 바꾸고 저장하지 않음",
+    );
+  }
+  function aiCheck(r) {
+    if (!online) return "";
+    return group(
+      "AI 법·현장 점검",
+      `<div id="ai-check" data-id="${esc(r.id)}">${checkCache[r.id] ? checkView(checkCache[r.id]) : `<p class="muted">점검 불러오는 중</p>`}</div>
+      <label class="field"><span>법 질문</span><input id="ai-q" type="text" maxlength="300" placeholder="예: 폐어망 실어 나르려면 허가 받아야 해?"></label>
+      <div class="ai-row"><button type="button" class="btn ghost" data-act="ai-ask">질문</button></div><div id="ai-ans"></div>`,
+      "폐어구 관련 조문 57개에서만 답함, 법률 자문 확인 필요",
+    );
+  }
+  const OK = { true: ["pos", "완료"], false: ["neg", "확인 필요"], null: ["", "안내"] };
+  const checkItems = (list) =>
+    `<ul class="ai-check">${list.map((i) => `<li><span class="ai-tag ${OK[i.ok][0]}">${OK[i.ok][1]}</span>${esc(i.text)}${i.law.length ? `<small>근거 ${i.law.map(esc).join(", ")}</small>` : ""}</li>`).join("")}</ul>`;
+  // 확인 필요 항목을 먼저 보이고, 완료·안내는 접어 둔다
+  const checkView = (c) => {
+    const need = c.items.filter((i) => i.ok === false),
+      rest = c.items.filter((i) => i.ok !== false);
+    return (
+      `<p class="ai-sum ${need.length ? "neg" : "pos"}">${need.length ? `확인 필요 ${need.length}건` : "확인 필요 없음"} <small>전체 ${c.items.length}건 중</small></p>` +
+      (need.length ? checkItems(need) : "") +
+      (rest.length
+        ? `<details class="ai-more"><summary>완료·안내 ${rest.length}건 보기</summary>${checkItems(rest)}</details>`
+        : "")
+    );
+  };
+  function aiScan() {
+    if (!online) return "";
+    return group(
+      "계량증명서 사진으로 채우기",
+      aiOn.vision
+        ? `<label class="field"><span>계량증명서 사진</span><input id="ai-photo" type="file" accept="image/*" capture="environment"></label><div id="ai-scan"></div>`
+        : `<p class="muted">사진 읽기 모델이 꺼져 있어 계량값 직접 입력 필요</p>`,
+      "읽은 값은 원본과 대조해 확인한 뒤에만 입력 칸에 들어감",
+    );
+  }
+
+  // ── 자원 순환 판매 (서버 모드) ──
+  const GEAR = ["폐자망", "폐어망", "폐로프", "폐통발 그물", "폐부표", "혼합 그물"];
+  const MATS = ["나일론", "폴리에틸렌", "폴리프로필렌", "혼합", "미확인"];
+  const ORIGINS = ["쓰다가 배출", "조업 중 인양", "침적 수거", "해안 수거", "모름"];
+  const ATTACH = ["뜸줄", "발줄", "납 봉돌", "부표", "철 틀", "금속 고리"];
+  const GRADE = { "판매 후보": "pos", 조건부: "", "처리 대상": "neg" };
+  const docsCache = {};
+  function replaceItem(rec) {
+    items = items.map((x) => (x.id === rec.id ? rec : x));
+    delete docsCache[rec.id];
+    delete checkCache[rec.id];
+    render();
+  }
+  function circHome() {
+    if (!online) return "";
+    const lots = items.flatMap((r) => (r.sales || []).map((s) => ({ ...s, ship: r.id })));
+    if (!lots.length) return "";
+    const sold = items.reduce(
+      (a, r) => {
+        const c = r.circulation;
+        return c ? { tons: a.tons + c.tons, revenue: a.revenue + c.revenue, gain: a.gain + c.siteGain } : a;
+      },
+      { tons: 0, revenue: 0, gain: 0 },
+    );
+    const open = lots.filter((s) => s.status === "offering");
+    return `<section class="card"><div class="sec-title"><div><h2>자원 순환 판매</h2><p>떼어 놓은 묶음은 원료로 팔고 나머지만 처리</p></div></div>
+      ${kv([
+        ["판매 완료", `${nf(3).format(sold.tons)}톤 · 매각 ${won(sold.revenue)}`],
+        ["집하장에 남은 돈", won(sold.gain), sold.gain >= 0 ? "pos" : "neg"],
+        ["매입 제안 받는 중", `${open.length}건`],
+      ])}
+      ${open.map((s) => `<a class="row" href="#/s/${esc(s.ship)}"><b>${esc(s.ship)} · ${esc(s.kind)} ${esc(s.material)} ${s.weight}톤</b><small>제안 ${s.offers.length}건 ›</small></a>`).join("")}</section>`;
+  }
+  const opt = (list, sel) => list.map((o) => `<option${o === sel ? " selected" : ""}>${o}</option>`).join("");
+  function lotView(r, s) {
+    const offers = s.offers
+      .map((o) => {
+        const m = o.money;
+        const act =
+          s.status === "offering" && o.status === "open"
+            ? `<button type="button" class="btn ghost sm" data-act="sale-accept" data-lot="${esc(s.id)}" data-offer="${esc(o.id)}">수락</button>`
+            : `<span class="ai-tag ${o.status === "accepted" ? "pos" : ""}">${o.status === "accepted" ? "수락" : o.status === "declined" ? "마감" : "열림"}</span>`;
+        return `<li><b>${esc(o.buyer)}</b> ${won(o.price)}/톤 · ${o.validUntil}까지${o.condition ? ` · ${esc(o.condition)}` : ""}${m ? `<small>매각 ${won(m.revenue)} · 피한 처리비 ${won(m.avoided)} · 준비비 −${won(m.prep)} · 수수료 −${won(m.teamFee)} → 집하장 ${won(m.siteGain)}</small>` : ""}<div class="ai-row">${act}</div></li>`;
+      })
+      .join("");
+    const form =
+      s.status === "offering"
+        ? `<div class="offer-form">${field("구매 업체", "o-buyer", "", "text", 'maxlength="40" placeholder="업체가 직접 내면 비워 둠"')}${field("매입가 (원/톤)", "o-price", "", "number", 'placeholder="예: 200000"')}${field("유효일", "o-until", M.DEMO_DATE.slice(0, 8) + "30", "date")}<div class="ai-row"><button type="button" class="btn ghost sm" data-act="sale-offer" data-lot="${esc(s.id)}">매입 제안 입력</button></div></div>`
+        : "";
+    return `<li class="lot"><p><b>${esc(s.kind)} · ${esc(s.material)} ${s.weight}톤</b> <span class="ai-tag ${GRADE[s.grade] ?? ""}">${esc(s.grade)}</span> <span class="ai-tag ${s.status === "sold" ? "pos" : ""}">${s.status === "sold" ? "판매 완료" : "판매 중"}</span></p>
+      <small>${esc(s.origin)}${s.note ? ` · ${esc(s.note)}` : ""}</small>${s.fixes?.length ? `<small>할 일: ${s.fixes.map(esc).join(" / ")}</small>` : ""}
+      <ul class="ai-check">${offers || `<li class="muted">아직 매입 제안 없음</li>`}</ul>${form}</li>`;
+  }
+  function circSection(r) {
+    if (!online) return "";
+    const c = r.circulation;
+    const lots = (r.sales || []).map((s) => lotView(r, s)).join("");
+    const add = `<details class="ai-more" id="sale-new"><summary>떼어 놓은 묶음 판매 등록</summary>
+      <label class="field"><span>어구 종류</span><select name="s-kind">${opt(GEAR, "폐자망")}</select></label>
+      <label class="field"><span>재질</span><select name="s-material">${opt(MATS, "나일론")}</select></label>
+      ${field("중량 (톤)", "s-weight", "", "number", 'placeholder="예: 1"')}
+      <label class="field"><span>나온 곳</span><select name="s-origin">${opt(ORIGINS, "쓰다가 배출")}</select></label>
+      <label class="choose"><input type="checkbox" name="s-separated" checked> 다른 어구와 따로 떼어 놓음</label>
+      <label class="choose"><input type="checkbox" name="s-intact" checked> 자르지 않은 온전한 상태</label>
+      <p class="muted">아직 붙어 있는 것</p>${ATTACH.map((a) => `<label class="choose"><input type="checkbox" name="s-att" value="${a}"> ${a}</label>`).join("")}
+      <div class="ai-row"><button type="button" class="btn ghost" data-act="sale-check">AI 판매 판정</button><button type="button" class="btn ghost" data-act="sale-add">판매 등록</button></div>
+      <div id="sale-out"></div></details>`;
+    return group(
+      "자원 순환 판매",
+      (c && c.lots ? kv([["판매 완료", `${c.tons}톤 · 매각 ${won(c.revenue)}`], ["집하장에 남은 돈", won(c.siteGain), c.siteGain >= 0 ? "pos" : "neg"], ["그물마중 수수료", won(c.teamFee)]]) : "") +
+        (lots ? `<ul class="lots">${lots}</ul>` : `<p class="muted">판매 묶음 없음. 종류별로 떼어 놓은 그물, 로프는 원료로 팔 수 있음</p>`) +
+        add,
+      "준비비(섬 작업, 추가 운송)와 수수료율은 팀 가정. 매입가는 업체 제안으로만 받음",
+    );
+  }
+  function readLot() {
+    const box = $("#sale-new"),
+      v = (n) => box.querySelector(`[name=${n}]`);
+    return {
+      kind: v("s-kind").value,
+      material: v("s-material").value,
+      weight: Number(v("s-weight").value),
+      origin: v("s-origin").value,
+      separated: v("s-separated").checked,
+      intact: v("s-intact").checked,
+      attachments: [...box.querySelectorAll("[name=s-att]:checked")].map((c) => c.value),
+    };
+  }
+  const STATUS_TAG = { "초안 완성": "pos", "일부 채움": "", "입력 필요": "neg", "받아야 함": "", "해당 없음": "" };
+  const docsView = (d) => {
+    const need = d.docs.filter((x) => x.needed),
+      skip = d.docs.filter((x) => !x.needed);
+    const li = (x) =>
+      `<li><span class="ai-tag ${STATUS_TAG[x.status] ?? ""}">${esc(x.status)}</span><b>${esc(x.name)}</b><small>${esc(x.owner)} · ${esc(x.when)}</small>${x.missing.length && x.needed ? `<small>직접 입력: ${x.missing.map(esc).join(", ")}</small>` : ""}<small>${esc(x.basis)}${x.note ? ` · ${esc(x.note)}` : ""}</small>${x.needed && Object.values(x.fields).some((v) => v != null && v !== "") ? `<div class="ai-row"><button type="button" class="btn ghost sm" data-act="doc-open" data-key="${esc(x.key)}">초안 보기</button></div>` : ""}</li>`;
+    return (
+      `<p class="ai-sum">필요 서류 ${need.length}종</p><ul class="ai-check">${need.map(li).join("")}</ul>` +
+      (skip.length ? `<details class="ai-more"><summary>지금 단계에선 필요 없음 ${skip.length}종</summary><ul class="ai-check">${skip.map(li).join("")}</ul></details>` : "")
+    );
+  };
+  function docsSection(r) {
+    if (!online) return "";
+    return group(
+      "AI 서류 안내",
+      `<div id="docs" data-id="${esc(r.id)}">${docsCache[r.id] ? docsView(docsCache[r.id]) : `<p class="muted">필요 서류 확인 중</p>`}</div>`,
+      "반출 단계와 기록을 보고 필요한 서류를 정하고 채울 수 있는 칸을 채움, 제출과 서명은 서류의 주인이 함",
+    );
+  }
+  async function loadDocs() {
+    const box = $("#docs");
+    if (!box || docsCache[box.dataset.id]) return;
+    const id = box.dataset.id;
+    try {
+      docsCache[id] = await window.GmServer.trade.docs(id);
+      if ($("#docs")?.dataset.id === id) $("#docs").innerHTML = docsView(docsCache[id]);
+    } catch (e) {
+      box.innerHTML = `<p class="err">${esc(e.message)}</p>`;
+    }
+  }
+
   function detail(id) {
     const r = find(id);
     if (!r)
@@ -355,7 +642,7 @@
     }
     return (
       top(esc(r.id), backBtn) +
-      `<div class="stack">${head}${info}<form id="edit" data-id="${esc(r.id)}" novalidate>${body}</form></div>`
+      `<div class="stack">${head}${info}${r.status !== "settled" ? aiCheck(r) : ""}${circSection(r)}${docsSection(r)}<form id="edit" data-id="${esc(r.id)}" novalidate>${body}</form></div>`
     );
   }
 
@@ -365,12 +652,12 @@
         (
           q,
           i,
-        ) => `<section class="group"><h3>${esc(q.label)}</h3><div class="card flat qcard" data-q="${i}">
+        ) => `<section class="group"><h3>${esc(q.label)}${q.repliedBy ? ` <span class="ai-tag pos">업체 회신 · ${esc(q.repliedBy)}</span>` : ""}</h3><div class="card flat qcard" data-q="${i}">
         <label class="choose"><input type="radio" name="choice" value="${i}"> 이 조건 선택</label>
         <label class="field"><span>인수 조건</span><textarea name="condition" rows="2">${esc(q.condition)}</textarea></label>
         ${field("예상 인수량 (톤)", "expected", q.expected)}${field("인수분 처리비 (원/톤)", "rate", q.rate)}
         ${field("잔재물 처리비 (원/톤)", "residualRate", q.residualRate)}${field("추가 선별·운반비 (원/건)", "extra", q.extra)}
-        ${field("견적 유효일", "validUntil", q.validUntil, "date")}<p class="qtotal" id="qt${i}"></p></div></section>`,
+        ${field("견적 유효일", "validUntil", q.validUntil, "date")}<p class="qtotal" id="qt${i}"></p>${online ? `<div class="ai-row"><button type="button" class="btn ghost sm" data-act="quote-reply" data-q="${i}">업체 회신으로 저장</button></div>` : ""}</div></section>`,
       )
       .join("");
     return (
@@ -426,6 +713,7 @@
   function settleEditor(r) {
     const q = r.quotes[r.choice];
     return (
+      aiScan() +
       group(
         "검수 입력",
         field("실제 반출량 (톤)", "total", r.weight) +
@@ -480,6 +768,7 @@
     return (
       top("반출 등록", backBtn) +
       `<form id="create" class="stack" novalidate>` +
+      aiIntake() +
       group(
         "집하 정보",
         sel("어구 종류", "kind", [
@@ -495,8 +784,8 @@
             "폴리프로필렌",
             "혼합",
           ]) +
-          field("예상 반출량 (톤)", "weight", "") +
-          field("마대 수 (개)", "bags", "") +
+          field("예상 반출량 (톤)", "weight", "", "number", 'placeholder="예: 4.5"') +
+          field("마대 수 (개)", "bags", "", "number", 'placeholder="예: 10"') +
           field(
             "출항 예정 일시",
             "departure",
@@ -530,15 +819,230 @@
   }
 
   // ── 동작 ──
+  const curId = () => decodeURIComponent((location.hash.split("/")[2] || ""));
   function fail(e) {
     const box = $("#err");
     box.textContent = e?.message || "입력 내용 확인 필요";
     box.hidden = false;
     box.scrollIntoView({ block: "center", behavior: "smooth" });
   }
+  // ── AI 동작 ──
+  const busy = (el, on, label) => {
+    if (!el) return;
+    el.disabled = on;
+    if (label) el.textContent = label;
+  };
+  function fillCreate(f) {
+    const form = $("#create");
+    if (!form) return;
+    const set = (name, v) => {
+      if (v != null && form.elements[name]) form.elements[name].value = v;
+    };
+    set("kind", f.kind);
+    set("material", f.material);
+    set("weight", f.weight);
+    set("bags", f.bags);
+    set("departure", f.departure);
+    form
+      .querySelectorAll("[name=checks]")
+      .forEach((c) => (c.checked = (f.checks || []).includes(c.value)));
+  }
+  async function runIntake(body) {
+    const out = $("#ai-out");
+    out.innerHTML = `<p class="muted">AI가 칸을 채우는 중</p>`;
+    try {
+      const r = await window.GmServer.ai.intake(body);
+      fillCreate(r.fields);
+      out.innerHTML =
+        (body.audio_base64 ? `<p class="memo">들은 말 · ${esc(r.heard)}</p>` : "") + factList(r.facts);
+      toast("AI가 채운 칸 확인 후 등록 필요");
+    } catch (e) {
+      out.innerHTML = `<p class="err">${esc(e.message)}</p>`;
+    }
+  }
+  let recorder = null;
+  async function toggleRecord() {
+    const btn = $("#ai-rec");
+    if (recorder) return recorder.stop();
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const chunks = [];
+      recorder = new MediaRecorder(stream);
+      recorder.ondataavailable = (e) => chunks.push(e.data);
+      recorder.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop());
+        recorder = null;
+        busy(btn, false, "🎤 녹음");
+        const blob = new Blob(chunks, { type: chunks[0]?.type || "audio/webm" });
+        const reader = new FileReader();
+        reader.onload = () =>
+          runIntake({
+            audio_base64: String(reader.result).split(",")[1],
+            content_type: blob.type.split(";")[0],
+          });
+        reader.readAsDataURL(blob);
+      };
+      recorder.start();
+      btn.textContent = "■ 멈추고 채우기";
+      setTimeout(() => recorder?.stop(), 30000); // 서버는 30초까지 받음
+    } catch {
+      toast("마이크를 쓸 수 없음, 글로 입력 필요");
+    }
+  }
+  async function loadCheck() {
+    const box = $("#ai-check");
+    if (!box || checkCache[box.dataset.id]) return;
+    const id = box.dataset.id;
+    try {
+      checkCache[id] = await window.GmServer.ai.checklist(id);
+      if ($("#ai-check")?.dataset.id === id) $("#ai-check").innerHTML = checkView(checkCache[id]);
+    } catch (e) {
+      box.innerHTML = `<p class="err">${esc(e.message)}</p>`;
+    }
+  }
+  // 사진은 긴 변 1600px JPEG로 줄여 보낸다(휴대폰 원본은 수 MB)
+  const shrink = (file) =>
+    new Promise((ok, no) => {
+      const img = new Image();
+      img.onload = () => {
+        const k = Math.min(1, 1600 / Math.max(img.width, img.height));
+        const c = document.createElement("canvas");
+        c.width = Math.round(img.width * k);
+        c.height = Math.round(img.height * k);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(img.src);
+        ok(c.toDataURL("image/jpeg", 0.85));
+      };
+      img.onerror = () => no(new Error("사진을 열 수 없음"));
+      img.src = URL.createObjectURL(file);
+    });
+  let lastScan = null;
+  async function runScan(file) {
+    const box = $("#ai-scan"),
+      id = $("#edit")?.dataset.id;
+    box.innerHTML = `<p class="muted">계량증명서 읽는 중</p>`;
+    try {
+      lastScan = await window.GmServer.ai.scan(id, await shrink(file));
+      const f = lastScan.fields;
+      box.innerHTML =
+        kv([
+          ["증명서 번호", f.cert_no || "읽지 못함"],
+          ["계량 일자", f.date || "읽지 못함"],
+          ["차량번호", f.vehicle_no || "읽지 못함"],
+          ["총중량", f.gross_kg != null ? nf(0).format(f.gross_kg) + " kg" : "읽지 못함"],
+          ["공차중량", f.tare_kg != null ? nf(0).format(f.tare_kg) + " kg" : "읽지 못함"],
+          ["실중량", f.net_kg != null ? nf(0).format(f.net_kg) + " kg" : "읽지 못함"],
+        ]) +
+        `<ul class="ai-check">${lastScan.checks.map((c) => `<li><span class="ai-tag ${c.ok ? "pos" : "neg"}">${c.ok ? "맞음" : "확인 필요"}</span>${esc(c.text)}</li>`).join("")}</ul>` +
+        `<div class="ai-row"><button type="button" class="btn ghost" data-act="ai-use">원본과 대조함, 이 값으로 채우기</button></div>`;
+    } catch (e) {
+      box.innerHTML = `<p class="err">${esc(e.message)}</p>`;
+    }
+  }
+  async function useScan() {
+    const form = $("#edit");
+    try {
+      const s = await window.GmServer.ai.confirmScan(lastScan.id, {});
+      if (s.suggest.total != null) form.elements.total.value = s.suggest.total;
+      if (s.suggest.reference) form.elements.reference.value = s.suggest.reference;
+      updateSettle(form, find(form.dataset.id));
+      $("#ai-scan").innerHTML = `<p class="memo">계량증명서 확인 완료 · 실제 반출량과 증빙번호 채움, 인수량은 업체 검수 결과로 입력</p>`;
+    } catch (e) {
+      toast(e.message);
+    }
+  }
+
   const acts = {
+    "ai-text": () => {
+      const t = $("#ai-text").value.trim();
+      t ? runIntake({ text: t }) : toast("말하거나 적은 내용 입력 필요");
+    },
+    "ai-rec": toggleRecord,
+    async "ai-ask"() {
+      const q = $("#ai-q").value.trim();
+      if (!q) return toast("질문 입력 필요");
+      $("#ai-ans").innerHTML = `<p class="muted">조문 찾는 중</p>`;
+      try {
+        const r = await window.GmServer.ai.ask(q);
+        $("#ai-ans").innerHTML = `<p class="memo">${esc(r.answer)}</p>` + factList(r.facts);
+      } catch (e) {
+        $("#ai-ans").innerHTML = `<p class="err">${esc(e.message)}</p>`;
+      }
+    },
+    "ai-use": useScan,
+    async "sale-check"() {
+      const out = $("#sale-out");
+      out.innerHTML = `<p class="muted">AI가 판정하는 중</p>`;
+      try {
+        const g = await window.GmServer.trade.checkLot(curId(), readLot());
+        out.innerHTML =
+          `<p class="ai-sum ${GRADE[g.grade] ?? ""}">판정: ${esc(g.grade)}</p>` +
+          (g.blockers.length ? `<ul class="ai-check">${g.blockers.map((b) => `<li><span class="ai-tag neg">안 됨</span>${esc(b)}</li>`).join("")}</ul>` : "") +
+          (g.fixes.length ? `<ul class="ai-check">${g.fixes.map((f) => `<li><span class="ai-tag">할 일</span>${esc(f)}</li>`).join("")}</ul>` : "") +
+          (g.buyers.length ? `<p class="memo">받는다고 공개한 업체: ${g.buyers.map((b) => `${esc(b.name)}(${esc(b.region)}${b.km != null ? `, ${b.km}km` : ""})`).join(", ")}</p>` : "");
+      } catch (e) {
+        out.innerHTML = `<p class="err">${esc(e.message)}</p>`;
+      }
+    },
+    async "sale-add"() {
+      try {
+        replaceItem(await window.GmServer.trade.addLot(curId(), readLot()));
+        toast("판매 묶음 등록 완료, 업체 매입 제안 대기");
+      } catch (e) {
+        $("#sale-out").innerHTML = `<p class="err">${esc(e.message)}</p>`;
+      }
+    },
+    async "sale-offer"(el) {
+      const box = el.closest(".offer-form"),
+        v = (n) => box.querySelector(`[name=${n}]`).value.trim();
+      try {
+        const body = { price: Number(v("o-price")), validUntil: v("o-until") };
+        if (v("o-buyer")) body.buyer = v("o-buyer");
+        replaceItem(await window.GmServer.trade.offer(curId(), el.dataset.lot, body));
+        toast("매입 제안 입력 완료");
+      } catch (e) {
+        toast(e.message);
+      }
+    },
+    async "sale-accept"(el) {
+      try {
+        replaceItem(await window.GmServer.trade.accept(curId(), el.dataset.lot, el.dataset.offer));
+        toast("판매 확정, 집하장 몫 계산 완료");
+      } catch (e) {
+        toast(e.message);
+      }
+    },
+    async "quote-reply"(el) {
+      const form = $("#edit"),
+        r = find(form.dataset.id),
+        i = Number(el.dataset.q);
+      try {
+        const q = readQuotes(form, r)[i];
+        replaceItem(await window.GmServer.trade.reply(r.id, i, q));
+        toast("업체 회신으로 저장 완료");
+      } catch (e) {
+        fail(e);
+      }
+    },
+    async "doc-open"(el) {
+      try {
+        await window.GmServer.trade.openDoc(curId(), el.dataset.key);
+      } catch (e) {
+        toast(e.message);
+      }
+    },
     guide: () => $("#guide").showModal(),
-    reset() {
+    async reset() {
+      if (online) {
+        try {
+          items = await window.GmServer.reset();
+        } catch (e) {
+          return toast("서버 초기화 실패, " + e.message);
+        }
+        $("#guide").close();
+        render();
+        return toast("시연 데이터 초기 상태 복원 완료");
+      }
       items = M.seed();
       warn = false;
       persist();
@@ -631,7 +1135,7 @@
     const el = e.target.closest("[data-act]");
     if (el && acts[el.dataset.act]) {
       e.preventDefault();
-      acts[el.dataset.act]();
+      acts[el.dataset.act](el);
     }
   });
   document.addEventListener("input", (e) => {
@@ -641,10 +1145,14 @@
       return;
     }
     const form = e.target.closest("#edit");
-    if (!form) return;
+    if (!form || e.target.closest("#ai-scan")) return;
     const r = find(form.dataset.id);
     if (r.status === "registered") updateQuotes(form, r);
     else updateSettle(form, r);
+  });
+
+  document.addEventListener("change", (e) => {
+    if (e.target.id === "ai-photo" && e.target.files[0]) runScan(e.target.files[0]);
   });
 
   function countUp() {
@@ -686,7 +1194,20 @@
       else if (r.status === "confirmed" && sailed(r)) updateSettle(form, r);
     }
     countUp();
+    loadCheck();
+    loadDocs();
   }
   window.addEventListener("hashchange", render);
   render();
+  window.GmServer?.start().then((list) => {
+    if (!list) return;
+    items = list;
+    online = true;
+    window.GmServer.ai
+      .status()
+      .then((s) => (aiOn = s))
+      .catch(() => {})
+      .finally(render);
+    toast("서버 저장 모드로 연결됨");
+  });
 })();

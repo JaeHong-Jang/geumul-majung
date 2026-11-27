@@ -307,8 +307,16 @@
       ["출항·하선", record.status !== "registered" && sailed],
       ["검수·정산", record.status === "settled"],
     ];
+    // 끝난 단계는 done, 다음에 할 단계 하나는 now(현재 단계)
+    const now = steps.findIndex(([, done]) => !done);
     return `<ol class="track">${steps
-      .map(([label, done]) => `<li${done ? ' class="done"' : ""}>${label}</li>`)
+      .map(([label, done], i) =>
+        done
+          ? `<li class="done">${label}</li>`
+          : i === now
+            ? `<li class="now" aria-current="step">${label}</li>`
+            : `<li>${label}</li>`,
+      )
       .join("")}</ol>`;
   }
 
@@ -344,15 +352,18 @@
 
   function quoteCard(quote, index) {
     const iname = (key) => `q${index}_${key}`;
-    return `<fieldset class="quote-card"><legend>${esc(quote.label)}</legend>
-      <label class="quote-choice"><input type="radio" name="choice" value="${index}"> 이 조건 선택</label>
+    // 카드 빈 곳 어디를 눌러도 이 조건이 선택됨(quoteStep의 click 처리)
+    return `<fieldset class="quote-card"><legend class="sr">${esc(quote.label)}</legend>
+      <label class="quote-choice"><input type="radio" name="choice" value="${index}"><span class="quote-name">${esc(quote.label)}</span><span class="quote-state" aria-hidden="true"></span></label>
+      ${quote.repliedBy ? `<p class="quote-reply">${chip(`업체 회신 · ${quote.repliedBy}`, "pos")}</p>` : ""}
+      <p class="quote-total" id="q-total-${index}" aria-live="polite"></p>
       ${field("인수 조건", iname("condition"), quote.condition, { maxLength: 240 })}
       ${numericField("예상 인수량 (톤)", iname("expected"), quote.expected, { step: "0.001" })}
       ${numericField("인수분 처리비 (원/톤)", iname("rate"), quote.rate)}
       ${numericField("잔재물 처리비 (원/톤)", iname("residualRate"), quote.residualRate)}
       ${numericField("추가 선별·운반비 (원/건)", iname("extra"), quote.extra)}
       ${field("견적 유효일", iname("validUntil"), quote.validUntil, { type: "date" })}
-      <p class="quote-total" id="q-total-${index}" aria-live="polite"></p></fieldset>`;
+      ${online() ? `<div class="trade-actions"><button type="button" class="btn btn-secondary btn-sm" data-trade="reply" data-q="${index}">업체 회신으로 저장</button></div><p class="trade-error" role="alert" hidden></p>` : ""}</fieldset>`;
   }
 
   function readQuote(form, original, index) {
@@ -381,7 +392,8 @@
         "지정 업체 인수 조건",
         `<p class="sheet-note">동일 업체의 선별 조건 2안 · 예상 총비용에 인수 톤당 운영료 ${amount(record.feeRate)} 포함 · 초깃값은 시연용 가정값</p>
       <div class="quote-comparison" data-comparison aria-live="polite"></div><div class="quote-grid">${record.quotes.map(quoteCard).join("")}</div>`,
-      );
+      ) +
+      trade(record);
     function saveQuotes(form, confirm) {
       const quotes = record.quotes.map((quote, index) =>
         readQuote(form, quote, index),
@@ -432,7 +444,7 @@
             record.weight,
             next.expected,
           );
-          output.textContent = `예상 총비용 ${amount(totals.cost)} · 고객 순절감 ${amount(totals.savings)}`;
+          output.innerHTML = `<span>예상 총비용</span><b>${amount(totals.cost)}</b><small>고객 순절감 ${amount(totals.savings)}</small>`;
           if (next.validUntil >= record.departure.slice(0, 10))
             options.push({ label: quote.label, cost: totals.cost });
         } catch {
@@ -451,7 +463,14 @@
           : "두 조건의 예상 총비용 동일";
       }
     };
+    wireTrade(form, record);
     form.addEventListener("input", update);
+    form.addEventListener("click", (event) => {
+      const choice = event.target.closest(".quote-card");
+      if (!choice || event.target.closest("input, select, textarea, label, button"))
+        return;
+      choice.querySelector("input[type=radio]").checked = true;
+    });
     update();
   }
 
@@ -510,15 +529,20 @@
           ["잔재 사유", actual.reason || "전량 인수"],
         ]),
       );
-      show({
+      const form = show({
         kicker: `${record.id} · ${statusNames[record.status]}`,
         title: "반출 정산서",
-        body: header + summary + section("정산 내역", resultRows(totals)),
+        body:
+          header +
+          summary +
+          section("정산 내역", resultRows(totals)) +
+          trade(record),
       });
+      wireTrade(form, record);
       return;
     }
     if (record.departure.slice(0, 10) > model().DEMO_DATE) {
-      show({
+      const form = show({
         kicker: `${record.id} · ${statusNames[record.status]}`,
         title: "출항 대기",
         body:
@@ -526,8 +550,10 @@
           section(
             "검수 입력 전",
             `<p class="sheet-note">${esc(window.NetUI.when(record.departure))} 출항 후 대천항 하선·계량 완료 시 실제 인수량 입력 가능</p>`,
-          ),
+          ) +
+          trade(record),
       });
+      wireTrade(form, record);
       return;
     }
     const fields = [
@@ -555,7 +581,8 @@
         "검수 입력",
         `<p class="sheet-note">${esc(record.facility)} · ${esc(quote.label)} · 입력 중량은 견적 예상치이므로 실측값 확인 필요</p><div class="sheet-grid">${fields}</div>`,
       ) +
-      section("예상 정산 내역", '<div data-results aria-live="polite"></div>');
+      section("예상 정산 내역", '<div data-results aria-live="polite"></div>') +
+      trade(record);
     const form = show({
       kicker: `${record.id} · ${statusNames[record.status]}`,
       title: "검수 및 정산",
@@ -595,11 +622,204 @@
         target.textContent = "계량 총 반출량 및 그 범위 내 인수량 입력 필요";
       }
     };
+    wireTrade(form, record);
     form.addEventListener("input", update);
     update();
   }
 
-  function open(id) {
+  // ── 자원 순환 판매 · AI 서류 안내 · 업체 회신 (서버 모드만, GmServer.trade) ──
+  const online = () => Boolean(app().online?.());
+  const GEAR = ["폐자망", "폐어망", "폐로프", "폐통발 그물", "폐부표", "혼합 그물"];
+  const MATS = ["나일론", "폴리에틸렌", "폴리프로필렌", "혼합", "미확인"];
+  const ORIGINS = ["쓰다가 배출", "조업 중 인양", "침적 수거", "해안 수거", "모름"];
+  const ATTACH = ["뜸줄", "발줄", "납 봉돌", "부표", "철 틀", "금속 고리"];
+  // 칩 색: 완료(파랑) · 손볼 일(주황) · 안 됨(빨강) · 나머지 중립. 글자를 항상 같이 씀
+  const TONE = {
+    "판매 후보": "pos",
+    조건부: "warn",
+    "처리 대상": "neg",
+    "초안 완성": "pos",
+    "일부 채움": "warn",
+    "입력 필요": "warn",
+  };
+  const chip = (text, tone = TONE[text]) =>
+    `<span class="chip${tone ? " " + tone : ""}">${esc(text)}</span>`;
+  const docsCache = new Map(); // 반출번호:버전 → 서류 안내 응답
+
+  function moneyLine(m) {
+    return `<p class="money-line">매각 ${amount(m.revenue)} + 피한 처리비 ${amount(m.avoided)} − 준비비 ${amount(m.prep)} − 수수료 ${amount(m.teamFee)} = <b>집하장 몫 ${amount(m.siteGain)}</b></p>`;
+  }
+
+  function offerRow(lot, o) {
+    const action =
+      lot.status === "offering" && o.status === "open"
+        ? `<button type="button" class="btn btn-secondary btn-sm" data-trade="accept" data-lot="${esc(lot.id)}" data-offer="${esc(o.id)}">이 제안 수락</button>`
+        : o.status === "accepted"
+          ? chip("수락함", "pos")
+          : chip(o.status === "declined" ? "마감" : "열림");
+    return `<li class="offer"><div><p><b>${esc(o.buyer)}</b> · ${amount(o.price)}/톤 · ${esc(o.validUntil)}까지</p>${o.condition ? `<small>${esc(o.condition)}</small>` : ""}${o.money ? moneyLine(o.money) : ""}</div>${action}</li>`;
+  }
+
+  function lotCard(lot) {
+    const offers = lot.offers.map((o) => offerRow(lot, o)).join("");
+    const form =
+      lot.status === "offering"
+        ? `<div class="offer-form">${field("구매 업체 · 비우면 처리업체 계정 제안", "o_buyer", "", { required: false, maxLength: 40 })}${numericField("매입가 (원/톤)", "o_price", "", { required: false, step: 1000 })}${field("제안 유효일", "o_until", model().DEMO_DATE.slice(0, 8) + "30", { type: "date", required: false })}<button type="button" class="btn btn-secondary btn-sm" data-trade="offer" data-lot="${esc(lot.id)}">매입 제안 입력</button></div>`
+        : "";
+    return `<li class="lot-card" data-lot-card><div class="lot-head"><b>${esc(lot.kind)} · ${esc(lot.material)} ${weight(lot.weight)}</b>${chip(lot.grade)}${lot.status === "sold" ? chip("판매 완료", "pos") : chip("판매 중", "go")}</div>
+      <p class="lot-meta">${esc(lot.origin)}${lot.attachments?.length ? ` · 남은 부착물 ${lot.attachments.map(esc).join(", ")}` : ""}${lot.note ? ` · ${esc(lot.note)}` : ""}</p>
+      ${lot.fixes?.length ? `<ul class="todo">${lot.fixes.map((f) => `<li>${chip("할 일", "warn")}<span>${esc(f)}</span></li>`).join("")}</ul>` : ""}
+      <ul class="offers">${offers || `<li class="offer none">아직 매입 제안 없음</li>`}</ul>${form}<p class="trade-error" role="alert" hidden></p></li>`;
+  }
+
+  function salesSection(record) {
+    if (!online()) return "";
+    const c = record.circulation;
+    const lots = record.sales || [];
+    const sum = c?.lots
+      ? description([
+          ["판매 완료", `${c.lots}묶음 · ${weight(c.tons)}`],
+          ["매각액", amount(c.revenue)],
+          ["집하장 몫", amount(c.siteGain)],
+          ["그물마중 수수료", amount(c.teamFee)],
+        ])
+      : "";
+    const select = (label, name, list, value) =>
+      field(label, name, value, { options: list, required: false });
+    const add = `<details class="lot-new" data-lot-new${lots.length ? "" : " open"}><summary>떼어 놓은 묶음 판매 등록</summary>
+      <div class="sheet-grid">${select("어구 종류", "s_kind", GEAR, "폐자망")}${select("재질", "s_material", MATS, "나일론")}${numericField("중량 (톤)", "s_weight", "", { required: false, step: "0.001" })}${select("나온 곳", "s_origin", ORIGINS, "쓰다가 배출")}
+      <fieldset class="checks field-wide"><legend>묶음 상태</legend><label><input type="checkbox" name="s_separated" checked> 다른 어구와 따로 떼어 놓음</label><label><input type="checkbox" name="s_intact" checked> 자르지 않은 온전한 상태</label></fieldset>
+      <fieldset class="checks field-wide"><legend>아직 붙어 있는 것</legend>${ATTACH.map((a) => `<label><input type="checkbox" name="s_att" value="${esc(a)}"> ${esc(a)}</label>`).join("")}</fieldset></div>
+      <div class="trade-actions"><button type="button" class="btn btn-secondary btn-sm" data-trade="check">AI 판매 판정</button><button type="button" class="btn btn-secondary btn-sm" data-trade="add">판매 등록</button></div>
+      <div data-sale-out aria-live="polite"></div><p class="trade-error" role="alert" hidden></p></details>`;
+    return `<section class="sheet-section trade" id="trade-sales"><h3>자원 순환 판매</h3><p class="sheet-note">종류별로 떼어 놓은 그물·로프는 재활용 원료로 팔고 나머지만 처리. 매입가는 업체 제안으로만 받고, 준비비(섬 작업·추가 운송)와 수수료율은 팀 가정</p>${sum}${lots.length ? `<ul class="lot-list">${lots.map(lotCard).join("")}</ul>` : ""}${add}</section>`;
+  }
+
+  function readLot(box) {
+    const v = (name) => box.querySelector(`[name=${name}]`);
+    return {
+      kind: v("s_kind").value,
+      material: v("s_material").value,
+      weight: Number(v("s_weight").value),
+      origin: v("s_origin").value,
+      separated: v("s_separated").checked,
+      intact: v("s_intact").checked,
+      attachments: [...box.querySelectorAll("[name=s_att]:checked")].map(
+        (c) => c.value,
+      ),
+    };
+  }
+
+  function gradeView(g) {
+    const items = [
+      ...g.blockers.map((b) => `<li>${chip("안 됨", "neg")}<span>${esc(b)}</span></li>`),
+      ...g.fixes.map((f) => `<li>${chip("할 일", "warn")}<span>${esc(f)}</span></li>`),
+    ].join("");
+    return `<div class="grade-out"><p class="grade-head">AI 판정 ${chip(g.grade)}</p>${items ? `<ul class="todo">${items}</ul>` : ""}${g.buyers.length ? `<p class="lot-meta">받는다고 공개한 업체 · ${g.buyers.map((b) => `${esc(b.name)}(${esc(b.region)}${b.km != null ? `, ${b.km}km` : ""})`).join(", ")}</p>` : ""}</div>`;
+  }
+
+  function docRow(d) {
+    const draft =
+      d.needed && Object.values(d.fields).some((v) => v != null && v !== "");
+    return `<li class="doc-row"><div><p>${chip(d.status)} <b>${esc(d.name)}</b></p><small>${esc(d.owner)} · ${esc(d.when)}</small>${d.needed && d.missing.length ? `<small class="doc-missing">직접 입력할 칸 · ${d.missing.map(esc).join(", ")}</small>` : ""}<small>근거 · ${esc(d.basis)}${d.note ? ` · ${esc(d.note)}` : ""}</small></div>${draft ? `<button type="button" class="btn btn-secondary btn-sm" data-trade="doc" data-key="${esc(d.key)}">초안 보기</button>` : ""}</li>`;
+  }
+
+  function docsView(data) {
+    const need = data.docs.filter((d) => d.needed);
+    const skip = data.docs.filter((d) => !d.needed);
+    return (
+      `<p class="docs-sum">이 단계에 필요한 서류 ${need.length}종</p><ul class="doc-list">${need.map(docRow).join("")}</ul>` +
+      (skip.length
+        ? `<details class="docs-skip"><summary>지금 단계에선 필요 없음 ${skip.length}종</summary><ul class="doc-list">${skip.map(docRow).join("")}</ul></details>`
+        : "")
+    );
+  }
+
+  function docsSection(record) {
+    if (!online()) return "";
+    const key = record.id + ":" + record.version;
+    return `<section class="sheet-section trade" id="trade-docs"><h3>AI 서류 안내</h3><p class="sheet-note">반출 단계와 기록을 보고 필요한 서류를 정하고, 앱 기록으로 채울 수 있는 칸은 채움. 제출과 서명은 서류의 주인이 함</p><div data-docs="${esc(key)}">${docsCache.has(key) ? docsView(docsCache.get(key)) : '<p class="sheet-note">필요 서류 확인 중</p>'}</div><p class="trade-error" role="alert" hidden></p></section>`;
+  }
+
+  const trade = (record) => salesSection(record) + docsSection(record);
+
+  async function loadDocs(form, record) {
+    const box = form.querySelector("[data-docs]");
+    const key = box?.dataset.docs;
+    if (!box || docsCache.has(key)) return;
+    try {
+      docsCache.set(key, await window.GmServer.trade.docs(record.id));
+      if (box.isConnected) box.innerHTML = docsView(docsCache.get(key));
+    } catch (error) {
+      if (box.isConnected) box.innerHTML = `<p class="trade-error" role="alert">${esc(error.message)}</p>`;
+    }
+  }
+
+  // 서버가 저장한 새 기록으로 바꾸고 시트를 같은 스크롤 위치로 다시 그린다
+  function refresh(record, message) {
+    const top = sheet().scrollTop;
+    app().replace(record);
+    open(record.id);
+    sheet().scrollTop = top;
+    app().toast(message);
+  }
+
+  function wireTrade(form, record) {
+    if (!online()) return;
+    loadDocs(form, record);
+    // 판매 칸에서 Enter가 시트의 주 동작(조건 확정·정산 확정)을 제출하지 않게
+    form.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && event.target.matches(".trade input"))
+        event.preventDefault();
+    });
+    form.addEventListener("click", async (event) => {
+      const button = event.target.closest("[data-trade]");
+      if (!button || button.disabled) return;
+      const box = button.closest("[data-lot-card], [data-lot-new], .quote-card, .trade");
+      const fail = box.querySelector(".trade-error");
+      const T = window.GmServer.trade;
+      fail.hidden = true;
+      button.disabled = true;
+      try {
+        switch (button.dataset.trade) {
+          case "check":
+            box.querySelector("[data-sale-out]").innerHTML = '<p class="sheet-note">AI가 판정하는 중</p>';
+            box.querySelector("[data-sale-out]").innerHTML = gradeView(await T.checkLot(record.id, readLot(box)));
+            break;
+          case "add":
+            refresh(await T.addLot(record.id, readLot(box)), "판매 묶음 등록 완료 · 업체 매입 제안 대기");
+            break;
+          case "offer": {
+            const v = (name) => box.querySelector(`[name=${name}]`).value.trim();
+            const body = { price: Number(v("o_price")), validUntil: v("o_until") };
+            if (v("o_buyer")) body.buyer = v("o_buyer");
+            refresh(await T.offer(record.id, button.dataset.lot, body), "매입 제안 입력 완료");
+            break;
+          }
+          case "accept":
+            refresh(await T.accept(record.id, button.dataset.lot, button.dataset.offer), "판매 확정 · 집하장 몫 계산 완료");
+            break;
+          case "reply": {
+            const i = Number(button.dataset.q);
+            refresh(await T.reply(record.id, i, readQuote(form, record.quotes[i], i)), "업체 회신으로 저장 완료");
+            break;
+          }
+          case "doc":
+            await T.openDoc(record.id, button.dataset.key);
+            break;
+        }
+      } catch (error) {
+        if (button.dataset.trade === "check") box.querySelector("[data-sale-out]").innerHTML = "";
+        fail.textContent = error?.message || "서버 요청 실패";
+        fail.hidden = false;
+        fail.scrollIntoView({ block: "nearest" });
+      } finally {
+        button.disabled = false;
+      }
+    });
+  }
+
+  function open(id, focus) {
     const record = app()
       .records()
       .find((item) => item.id === id);
@@ -610,6 +830,8 @@
     const snapshot = JSON.stringify(record);
     if (record.status === "registered") quoteStep(record, snapshot);
     else settlementStep(record, snapshot);
+    // 운영 현황 '매입 제안 받는 중'에서 열면 판매 구역으로 바로 이동
+    if (focus) sheet().querySelector("#trade-" + focus)?.scrollIntoView({ block: "start" });
   }
 
   window.NetForms = Object.freeze({ create, open });
