@@ -2,10 +2,24 @@
   "use strict";
 
   const DEMO_DATE = "2026-11-27";
+  // 인수 기준 사전 점검 (Fisheries Iceland 부착물 기준 · Net Your Problem 표본 확인 참고)
+  const CHECKS = [
+    "부착 로프 분리",
+    "금속 고리·추 제거",
+    "패각·진흙 등 이물 제거",
+    "재질 표본 사진 확보",
+  ];
+
+  // 1톤 초과 반입은 출항 24시간 전 업체 신청 (Fisheries Iceland 규칙 차용)
+  function noticeBy(departure) {
+    return new Date(Date.parse(departure + ":00Z") - 864e5)
+      .toISOString()
+      .slice(0, 16);
+  }
 
   function requireText(value, name) {
     if (typeof value !== "string" || !value.trim()) {
-      throw new Error(name + " 항목을 입력해 주세요.");
+      throw new Error(name + " 입력 필요");
     }
   }
 
@@ -15,7 +29,7 @@
       value < 0 ||
       value > Number.MAX_SAFE_INTEGER
     ) {
-      throw new Error(name + "에 0 이상의 유효한 숫자를 입력해 주세요.");
+      throw new Error(name + ": 0 이상의 유효 숫자 입력 필요");
     }
     return value;
   }
@@ -23,14 +37,14 @@
   function won(value, name) {
     amount(value, name);
     if (!Number.isSafeInteger(value)) {
-      throw new Error(name + "에 원 단위 정수를 입력해 주세요.");
+      throw new Error(name + ": 원 단위 정수 입력 필요");
     }
     return value;
   }
 
   function positiveWeight(value, name) {
     amount(value, name);
-    if (value === 0) throw new Error(name + "은 0톤보다 커야 합니다.");
+    if (value === 0) throw new Error(name + ": 0톤 초과 값 필요");
   }
 
   function calendarDay(value, name) {
@@ -42,7 +56,7 @@
       !Number.isFinite(date.getTime()) ||
       date.toISOString().slice(0, 10) !== value
     ) {
-      throw new Error(name + "에 올바른 날짜를 입력해 주세요.");
+      throw new Error(name + ": 올바른 날짜 입력 필요");
     }
     return value;
   }
@@ -50,8 +64,7 @@
   function checkAccepted(total, accepted) {
     positiveWeight(total, "반출 중량");
     amount(accepted, "인수 중량");
-    if (accepted > total)
-      throw new Error("인수 중량은 반출 중량을 넘을 수 없습니다.");
+    if (accepted > total) throw new Error("인수 중량의 반출 중량 초과 불가");
   }
 
   function defaults(weight, date) {
@@ -60,7 +73,7 @@
     return [
       {
         label: "현 상태 인수",
-        condition: "로프를 부착한 채로 입고하고 육상에서 선별합니다.",
+        condition: "로프 부착 상태로 입고 후 육상 선별",
         expected: Math.min(weight, Math.round(weight * 0.6 * 1000) / 1000),
         rate: 220000,
         residualRate: 300000,
@@ -69,7 +82,7 @@
       },
       {
         label: "로프 분리 후 인수",
-        condition: "섬에서 부착 로프를 분리한 뒤 그물만 마대에 담습니다.",
+        condition: "섬에서 부착 로프 분리 후 그물만 마대 적재",
         expected: Math.min(weight, Math.round(weight * 0.8 * 1000) / 1000),
         rate: 180000,
         residualRate: 300000,
@@ -110,7 +123,7 @@
 
   function verify(record) {
     if (!record || typeof record !== "object")
-      throw new Error("반출 기록을 확인해 주세요.");
+      throw new Error("반출 기록 확인 필요");
     for (const [key, title] of Object.entries({
       id: "반출 번호",
       kind: "어구 종류",
@@ -119,21 +132,29 @@
     }))
       requireText(record[key], title);
     if (!Number.isSafeInteger(record.bags) || record.bags < 1) {
-      throw new Error("마대 수에 1 이상의 정수를 입력해 주세요.");
+      throw new Error("마대 수: 1 이상의 정수 입력 필요");
     }
     positiveWeight(record.weight, "예상 중량");
     if (
       typeof record.departure !== "string" ||
       !/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d$/.test(record.departure)
     ) {
-      throw new Error("반출 예정일과 시간을 확인해 주세요.");
+      throw new Error("반출 예정 일시 확인 필요");
     }
     const departureDay = calendarDay(
       record.departure.slice(0, 10),
       "반출 예정일",
     );
     if (record.note != null && typeof record.note !== "string")
-      throw new Error("현장 메모를 확인해 주세요.");
+      throw new Error("현장 메모 확인 필요");
+    if (
+      record.checks != null &&
+      !(
+        Array.isArray(record.checks) &&
+        record.checks.every((c) => CHECKS.includes(c))
+      )
+    )
+      throw new Error("사전 점검 항목 확인 필요");
     if (
       record.photo &&
       (typeof record.photo !== "string" ||
@@ -141,19 +162,17 @@
           record.photo,
         ))
     ) {
-      throw new Error(
-        "첨부 사진은 JPEG, PNG, WEBP 또는 GIF 형식으로 등록해 주세요.",
-      );
+      throw new Error("첨부 사진: JPEG·PNG·WEBP·GIF 형식만 등록 가능");
     }
     if (!["registered", "confirmed", "settled"].includes(record.status)) {
-      throw new Error("반출 단계가 올바르지 않습니다.");
+      throw new Error("반출 단계 오류");
     }
     if (!Array.isArray(record.quotes) || record.quotes.length === 0) {
-      throw new Error("인수 조건을 한 가지 이상 입력해 주세요.");
+      throw new Error("인수 조건 1건 이상 입력 필요");
     }
     for (const quote of record.quotes) {
       if (!quote || typeof quote !== "object")
-        throw new Error("인수 조건을 확인해 주세요.");
+        throw new Error("인수 조건 확인 필요");
       requireText(quote.label, "조건 이름");
       requireText(quote.condition, "인수 조건");
       calendarDay(quote.validUntil, "견적 유효일");
@@ -161,7 +180,7 @@
     }
     if (record.status === "registered") {
       if (record.choice != null)
-        throw new Error("등록 단계에는 확정한 인수 조건이 없습니다.");
+        throw new Error("등록 단계에는 확정 인수 조건 부재");
     } else {
       const index = record.choice;
       if (
@@ -169,21 +188,21 @@
         index < 0 ||
         index >= record.quotes.length
       ) {
-        throw new Error("확정할 인수 조건을 선택해 주세요.");
+        throw new Error("확정할 인수 조건 선택 필요");
       }
       if (record.quotes[index].validUntil < departureDay) {
         throw new Error(
-          "견적 유효일이 출항 예정일보다 빠릅니다. 업체의 인수 조건을 다시 확인해 주세요.",
+          "견적 유효일이 출항 예정일보다 이름 · 업체 인수 조건 재확인 필요",
         );
       }
     }
     if (record.status === "settled") {
       const actual = record.actual;
       if (!actual || typeof actual !== "object")
-        throw new Error("실제 계량과 인수 결과를 입력해 주세요.");
+        throw new Error("실제 계량 및 인수 결과 입력 필요");
       // ponytail: 시연 기준일 고정, 현장용은 실제 하선 시각 기준으로 교체
       if (departureDay > DEMO_DATE)
-        throw new Error("출항 전에는 검수·정산을 입력할 수 없습니다.");
+        throw new Error("출항 전 검수·정산 입력 불가");
       calculate(
         record,
         record.quotes[record.choice],
@@ -194,8 +213,10 @@
       requireText(actual.reference, "계량·인수 증빙 번호");
       if (actual.accepted < actual.total)
         requireText(actual.reason, "잔재물 사유");
+      if (actual.signer != null && typeof actual.signer !== "string")
+        throw new Error("업체 확인자 확인 필요");
     } else if (record.actual != null) {
-      throw new Error("검수 완료 단계에 실제 계량 결과를 함께 저장해 주세요.");
+      throw new Error("실제 계량 결과는 검수 완료 단계에서만 저장 가능");
     }
     return record;
   }
@@ -223,7 +244,8 @@
         bags: 12,
         departure: "2026-11-27T08:30",
         status: "confirmed",
-        note: "로프 분리 후 그물을 마대별로 묶어 인계합니다.",
+        note: "로프 분리 후 그물을 마대별로 결속해 인계함",
+        checks: ["부착 로프 분리", "금속 고리·추 제거"],
       },
       {
         id: "SS-2611-005",
@@ -233,7 +255,7 @@
         bags: 8,
         departure: "2026-11-30T09:00",
         status: "registered",
-        note: "부착 로프가 섞여 있어 육상 선별 조건을 확인합니다.",
+        note: "부착 로프 혼입으로 육상 선별 조건 확인 중",
       },
       {
         id: "SS-2611-004",
@@ -243,7 +265,7 @@
         bags: 10,
         departure: "2026-12-01T08:30",
         status: "confirmed",
-        note: "마대에 표본 그물을 따로 표시했습니다.",
+        note: "마대별 표본 그물 별도 표시",
       },
       {
         id: "SS-2611-003",
@@ -253,7 +275,7 @@
         bags: 6,
         departure: "2026-12-02T10:00",
         status: "registered",
-        note: "재질 표본 확인이 필요합니다.",
+        note: "재질 표본 확인 필요",
       },
       {
         id: "SS-2611-002",
@@ -263,12 +285,13 @@
         bags: 11,
         departure: "2026-11-24T08:50",
         status: "settled",
-        note: "지정 업체 검수 완료.",
+        note: "지정 업체 검수 완료",
         actual: {
           total: 5,
           accepted: 4,
           reason: "부착 로프와 오염 그물",
           reference: "예시-계량-1124",
+          signer: "업체 검수 담당 (가상)",
         },
       },
       {
@@ -279,7 +302,7 @@
         bags: 7,
         departure: "2026-11-20T09:10",
         status: "settled",
-        note: "잔재물을 별도 처리했습니다.",
+        note: "잔재물 별도 처리 완료",
         actual: {
           total: 3.1,
           accepted: 2.8,
@@ -306,6 +329,8 @@
 
   const model = Object.freeze({
     DEMO_DATE,
+    CHECKS,
+    noticeBy,
     seed,
     defaults,
     calculate,

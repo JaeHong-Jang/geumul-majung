@@ -111,6 +111,11 @@ test("오프라인 브라우저용 전역 API와 독립된 시연 데이터, 중
   assert.equal(lots[0].facility, "보령 지정 재활용업체 (가상)");
   assert.equal(model.allocateId(lots), "SS-2611-007");
   assert.equal(model.allocateId(lots, "2026-12-01"), "SS-2612-001");
+  assert.equal(model.noticeBy("2026-11-27T08:30"), "2026-11-26T08:30");
+  assert.throws(
+    () => model.verify({ ...lots[0], checks: ["임의"] }),
+    /사전 점검/,
+  );
   lots[0].quotes[1].rate = 1;
   assert.equal(model.seed()[0].quotes[1].rate, 180000);
 });

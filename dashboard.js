@@ -113,7 +113,7 @@
     } catch {
       invalidStorage = true;
       $("storage-warning").textContent =
-        "이 브라우저의 저장 기록을 모두 읽을 수 없어 보기 모드로 열었습니다. 로컬 서버에서 열거나 저장소 사용 설정을 확인해 주세요.";
+        "저장 기록 일부 판독 불가 · 보기 모드로 전환함. 로컬 서버 실행 또는 저장소 설정 확인 필요";
       $("storage-warning").hidden = false;
     }
     rows = Array.from(map.values()).sort((a, b) =>
@@ -122,8 +122,7 @@
   }
   function save(record, isNew = false) {
     loadRecords();
-    if (invalidStorage)
-      throw Error("브라우저 저장소를 확인한 후 다시 저장해 주세요.");
+    if (invalidStorage) throw Error("브라우저 저장소 확인 후 재저장 필요");
     model.verify(record);
     const old = rows.find((r) => r.id === record.id);
     if (
@@ -131,9 +130,7 @@
         ? old || record.status !== "registered"
         : !old || (old._rev ?? 0) !== (record._rev ?? 0)
     )
-      throw Error(
-        "같은 반출번호가 변경됐습니다. 창을 다시 열고 확인해 주세요.",
-      );
+      throw Error("동일 반출번호 변경 감지 · 창 재실행 후 확인 필요");
     if (
       !isNew &&
       !(
@@ -142,15 +139,13 @@
         (old.status === "confirmed" && record.status === "settled")
       )
     )
-      throw Error(
-        "반출 단계가 변경되었습니다. 최신 반출 상태를 확인해 주세요.",
-      );
+      throw Error("반출 단계 변경 감지 · 최신 상태 확인 필요");
     const updated = { ...record, _rev: (old?._rev ?? 0) + 1 };
     try {
       localStorage.setItem(storagePrefix + updated.id, JSON.stringify(updated));
     } catch {
       throw Error(
-        "저장 공간이 부족하거나 저장이 제한되었습니다. 사진 크기와 브라우저 설정을 확인해 주세요.",
+        "저장 공간 부족 또는 저장 제한 · 사진 크기 및 브라우저 설정 확인 필요",
       );
     }
     loadRecords();
@@ -187,123 +182,388 @@
       "</span>"
     );
   }
-  function metric(label, num, unit, icon, tone) {
+  const man = (won) =>
+    (won > 0 ? "+" : won < 0 ? "−" : "") +
+    nf.format(Math.round(Math.abs(won) / 1000) / 10) +
+    "만 원";
+  let selected = null;
+  function brief(r) {
+    if (r.status === "settled") {
+      const a = r.actual,
+        c = model.calculate(
+          r,
+          r.quotes[r.choice],
+          a.total,
+          a.accepted,
+          a.extra,
+        );
+      return {
+        label: "실측 인수율",
+        big: c.ratio.toFixed(0) + "<small>%</small>",
+        em: "고객 절감 " + man(c.savings),
+        stats: [
+          ["인수", tons(a.accepted) + "톤"],
+          ["잔재", tons(c.residual) + "톤"],
+          ["팀 이익", man(c.margin)],
+        ],
+        cta: "정산서 열람",
+      };
+    }
+    const options = r.quotes.map((q) => ({
+      q,
+      c: model.calculate(r, q, r.weight, q.expected),
+    }));
+    const best =
+      r.status === "confirmed"
+        ? options[r.choice]
+        : options.reduce((a, b) => (b.c.savings > a.c.savings ? b : a));
+    const waiting =
+      r.status === "confirmed" && r.departure.slice(0, 10) > model.DEMO_DATE;
+    return {
+      label:
+        r.status === "confirmed"
+          ? "확정 조건 예상 인수량"
+          : "최적 조건 예상 인수량 · " + best.q.label,
+      big: tons(best.q.expected) + "<small>톤</small>",
+      em: "고객 절감 " + man(best.c.savings),
+      stats: [
+        ["인수율", best.c.ratio.toFixed(0) + "%"],
+        ["운영료", man(best.c.fee)],
+        ["견적", r.quotes.length + "건"],
+      ],
+      cta:
+        r.status === "registered"
+          ? "인수 조건 비교"
+          : waiting
+            ? "출항 대기 · 상세 열람"
+            : "검수·정산 입력",
+      wait: waiting,
+    };
+  }
+  function card(r) {
+    if (!r) return "";
+    const b = brief(r),
+      d = dateParts(r.departure);
     return (
-      '<div class="metric"><div class="metric-label">' +
-      label +
-      '<i class="metric-icon ' +
-      tone +
+      '<div class="card-photo" style="background-image:url(' +
+      (r.photo ? "'" + r.photo + "'" : "'assets/daecheon.jpg'") +
+      ')">' +
+      badge(r.status) +
+      '</div><div class="card-body"><h3>' +
+      esc(r.id) +
+      " · " +
+      esc(r.kind) +
+      '</h3><p class="card-meta">' +
+      esc(r.material) +
+      " · 마대 " +
+      r.bags +
+      "개 · " +
+      d.short +
+      " (" +
+      d.day +
+      ") " +
+      d.time +
+      '</p><div class="card-label">' +
+      esc(b.label) +
+      '</div><div class="card-big"><span class="num">' +
+      b.big +
+      "</span><em>" +
+      b.em +
+      '</em></div><div class="card-stats">' +
+      b.stats
+        .map(([k, v]) => "<span>" + k + " <b>" + v + "</b></span>")
+        .join("") +
+      '</div><button class="cta' +
+      (b.wait ? " wait" : "") +
+      '" data-open="' +
+      esc(r.id) +
       '">' +
-      svg(icon, 18) +
-      '</i></div><div class="metric-amount"><b>' +
-      num +
-      "</b><span>" +
-      unit +
-      "</span></div></div>"
+      b.cta +
+      " " +
+      svg("arrow-right", 17) +
+      "</button></div>"
     );
   }
-  function task(status, icon, label, sub, tone) {
-    const count = rows.filter((r) => r.status === status).length;
+  function detail() {
     return (
-      '<button class="task" data-filter="' +
-      status +
-      '"><i class="task-icon ' +
-      tone +
-      '">' +
-      svg(icon, 19) +
-      '</i><span class="task-name"><strong>' +
-      label +
-      "</strong><small>" +
-      sub +
-      "</small></span><b>" +
-      count +
-      "</b>" +
-      svg("chevron", 14) +
-      "</button>"
+      '<section class="glass side card-panel rise"><div class="card" id="ops-card">' +
+      card(rows.find((r) => r.id === selected)) +
+      "</div></section>"
     );
   }
+  const counter = (value, digits = 0) =>
+    '<span data-count="' +
+    value +
+    '" data-digits="' +
+    digits +
+    '">' +
+    Number(value).toFixed(digits) +
+    "</span>";
   function overview() {
     const active = rows.filter((r) => r.status !== "settled");
-    const sorted = [...active].sort((a, b) =>
+    const settled = rows.filter((r) => r.status === "settled");
+    const byDate = [...rows].sort((a, b) =>
       a.departure.localeCompare(b.departure),
     );
-    const next = sorted.find(
+    const upcoming = [...active].sort((a, b) =>
+      a.departure.localeCompare(b.departure),
+    );
+    const next = upcoming.find(
       (r) => r.departure.slice(0, 10) >= model.DEMO_DATE,
     );
-    const settled = rows.filter((r) => r.status === "settled");
-    const total = settled.reduce((acc, r) => acc + r.actual.total, 0);
-    const accepted = settled.reduce((acc, r) => acc + r.actual.accepted, 0);
-    const when = next ? dateParts(next.departure) : null;
-    const feature = next
-      ? '<div class="hero"><div class="hero-body"><div class="hero-tag">' +
-        svg("ship", 15) +
-        (next.departure.slice(0, 10) === model.DEMO_DATE
-          ? "오늘 반출 · 검수 대기"
-          : "다음 반출 일정") +
-        '</div><h2>삽시도 <span>→</span> 대천항</h2><p class="hero-meta">' +
-        svg("calendar", 16) +
-        "<span>" +
-        when.short +
-        " (" +
-        when.day +
-        ") " +
-        when.time +
-        "</span><i></i>" +
-        svg("scale", 16) +
-        "<span>" +
-        tons(next.weight) +
-        '톤</span></p><button class="hero-btn" data-open="' +
-        esc(next.id) +
-        '">반출 상세 보기 ' +
-        svg("arrow-right", 15) +
-        '</button></div><span class="photo-caption">' +
-        svg("pin", 12) +
-        "보령 대천항</span></div>"
-      : '<div class="hero"><div class="hero-body"><div class="hero-tag">' +
-        svg("ship", 15) +
-        '다음 반출 일정</div><h2>예정된 반출이 없습니다</h2><button class="hero-btn" data-action="create">새 반출 등록 ' +
-        svg("plus", 15) +
-        "</button></div></div>";
+    if (!rows.some((r) => r.id === selected))
+      selected = (next || byDate.at(-1))?.id ?? null;
+    const total = settled.reduce((s, r) => s + r.actual.total, 0);
+    const accepted = settled.reduce((s, r) => s + r.actual.accepted, 0);
+    const ratio = total ? (accepted / total) * 100 : 0;
+    const count = (st) => rows.filter((r) => r.status === st).length;
+    const today = rows.filter(
+      (r) => r.departure.slice(0, 10) === model.DEMO_DATE,
+    ).length;
+    const maxW = Math.max(6, ...rows.map((r) => r.weight));
+    const spark = upcoming.length
+      ? upcoming
+          .map(
+            (r, i) =>
+              (i ? "L" : "M") +
+              ((i / Math.max(1, upcoming.length - 1)) * 140).toFixed(1) +
+              " " +
+              (40 - (r.weight / maxW) * 34).toFixed(1),
+          )
+          .join("")
+      : "M0 40L140 40";
+    const ring = (rad, pct, color, w) =>
+      '<circle cx="80" cy="80" r="' +
+      rad +
+      '" stroke="#edf3f6" stroke-width="' +
+      w +
+      '"/><circle class="arc" cx="80" cy="80" r="' +
+      rad +
+      '" pathLength="100" stroke="' +
+      color +
+      '" stroke-width="' +
+      w +
+      '" style="--off:' +
+      (100 - pct).toFixed(1) +
+      '"/>';
     return (
-      '<div class="spotlight">' +
-      feature +
-      '<section class="panel queue"><div class="queue-title"><h2>처리할 업무</h2><span class="queue-count">' +
+      '<div class="ops">' +
+      '<div class="ops-main">' +
+      '<section class="glass side kpi-panel rise" style="--d:1"><div class="side-head"><h2>반출 현황</h2><span class="chip">금일 출항 ' +
+      today +
+      '건</span></div><div class="kpis">' +
+      '<div class="kpi"><span class="kpi-label">전체 반출</span><span class="num">' +
+      counter(rows.length) +
+      '<small>건</small></span><div class="viz split">' +
+      [
+        ["registered", "var(--amber)"],
+        ["confirmed", "var(--cyan)"],
+        ["settled", "var(--slate)"],
+      ]
+        .map(
+          ([st, c]) =>
+            '<i style="flex:' +
+            count(st) +
+            ";--tone:" +
+            c +
+            '" title="' +
+            names[st] +
+            " " +
+            count(st) +
+            '건"></i>',
+        )
+        .join("") +
+      '</div></div><div class="kpi"><span class="kpi-label">반출 예정 중량</span><span class="num">' +
+      counter(
+        active.reduce((s, r) => s + r.weight, 0),
+        1,
+      ) +
+      '<small>톤</small></span><span class="chip">대기 ' +
       active.length +
-      "건</span></div>" +
-      task(
+      '건</span><svg class="viz spark" viewBox="0 0 140 44" preserveAspectRatio="none"><path d="' +
+      spark +
+      '" fill="none" stroke="#0a6ebd" stroke-width="2.5" vector-effect="non-scaling-stroke"/></svg></div>' +
+      '<div class="kpi"><span class="kpi-label">누적 인수 중량</span><span class="num">' +
+      counter(accepted, 1) +
+      '<small>톤</small></span><div class="viz lolli">' +
+      settled
+        .map(
+          (r) =>
+            '<i style="--h:' +
+            ((r.actual.accepted / maxW) * 100).toFixed(0) +
+            '%;--c:#0a6ebd" title="' +
+            esc(r.id) +
+            ' 인수"></i><i style="--h:' +
+            ((r.actual.total / maxW) * 100).toFixed(0) +
+            '%" title="' +
+            esc(r.id) +
+            ' 계량"></i>',
+        )
+        .join("") +
+      '</div></div><div class="kpi"><span class="kpi-label">누적 인수율</span><div class="gauge"><svg viewBox="0 0 120 66"><path d="M10 60a50 50 0 0 1 100 0" fill="none" stroke="#e5edf1" stroke-width="9" stroke-linecap="round"/><path class="arc" d="M10 60a50 50 0 0 1 100 0" pathLength="100" fill="none" stroke="#0a6ebd" stroke-width="9" stroke-linecap="round" style="--off:' +
+      (100 - ratio).toFixed(1) +
+      '"/></svg><span class="num">' +
+      (total ? counter(ratio, 1) : "—") +
+      "<small>%</small></span></div></div></div></section>" +
+      '<div class="widgets"><section class="glass widget rise" style="--d:2"><h2 class="w-title">인수 구성</h2><p class="w-sub">정산 완료 반출의 실계량 기준</p><div class="rings-wrap"><div class="rings"><svg width="160" height="160" viewBox="0 0 160 160">' +
+      ring(68, ratio, "#0a6ebd", 12) +
+      ring(49, total ? 100 - ratio : 0, "#e8a83a", 10) +
+      ring(
+        32,
+        rows.length ? (settled.length / rows.length) * 100 : 0,
+        "#18b4cc",
+        8,
+      ) +
+      '</svg><div class="rings-center"><span class="num">' +
+      counter(ratio) +
+      '</span><small>% 인수</small></div></div><div class="key">' +
+      '<div><i style="background:#0a6ebd"></i>인수 중량<b>' +
+      counter(accepted, 1) +
+      "톤</b></div>" +
+      '<div><i style="background:#e8a83a"></i>잔재 중량<b>' +
+      counter(total - accepted, 1) +
+      "톤</b></div>" +
+      '<div><i style="background:#18b4cc"></i>정산 완료<b>' +
+      settled.length +
+      "/" +
+      rows.length +
+      "건</b></div></div></div></section>" +
+      '<section class="glass widget rise" style="--d:3"><div class="w-head"><div><h2 class="w-title">반출별 중량</h2><p class="w-sub">출항일 순 정렬 · 막대 선택 시 상세 카드 연동</p></div><span class="chip">최대 ' +
+      tons(maxW) +
+      '톤</span></div><div class="bars">' +
+      byDate
+        .map(
+          (r, i) =>
+            '<button class="bar" data-pick="' +
+            esc(r.id) +
+            '" style="--i:' +
+            i +
+            ";--h:" +
+            ((r.weight / maxW) * 100).toFixed(1) +
+            '%" aria-label="' +
+            esc(r.id) +
+            " " +
+            tons(r.weight) +
+            '톤"><i></i><span class="tip">' +
+            esc(r.id.slice(-3)) +
+            "번 · " +
+            tons(r.weight) +
+            "톤</span><small>" +
+            dateParts(r.departure).short +
+            "</small></button>",
+        )
+        .join("") +
+      "</div></section></div></div>" +
+      '<div class="ops-aside">' +
+      detail() +
+      '<aside class="glass side rise" style="--d:4"><div class="side-head"><h2 class="w-title">처리할 업무</h2></div>' +
+      '<div class="todo">' +
+      todo(
         "registered",
-        "clipboard",
         "인수 조건 협의",
-        "업체 인수 기준과 비용 비교",
-        "sand",
+        "업체 조건 2안 비교 후 확정",
+        "var(--amber)",
+        active.length,
       ) +
-      task(
+      todo(
         "confirmed",
-        "scale",
         "검수·정산 입력",
-        "실제 인수량과 증빙 확인",
-        "mint",
+        "하선 후 실계량·증빙 입력",
+        "var(--cyan)",
+        active.length,
       ) +
-      "</section></div>" +
-      '<section class="metrics" aria-label="반출 요약">' +
-      metric("전체 반출 건수", rows.length, "건", "layers", "blue") +
-      metric(
-        "반출 예정 중량",
-        tons(active.reduce((sum, r) => sum + r.weight, 0)),
-        "톤",
-        "package",
-        "sand",
+      "</div>" +
+      // 누적 성과 (서천서부수협 회수량·절감액 보고 방식 참고)
+      '<div class="side-head"><h2 class="w-title">최근 정산</h2><span class="chip">누적 고객 절감 ' +
+      man(
+        settled.reduce((sum, r) => {
+          const a = r.actual;
+          return (
+            sum +
+            model.calculate(r, r.quotes[r.choice], a.total, a.accepted, a.extra)
+              .savings
+          );
+        }, 0),
       ) +
-      metric("누적 인수 중량", tons(accepted), "톤", "cycle", "mint") +
-      metric(
-        "누적 인수율",
-        total ? ((accepted / total) * 100).toFixed(1) : "—",
-        "%",
-        "trend",
-        "violet",
-      ) +
-      "</section>"
+      '</span></div><div class="feed">' +
+      (settled.length
+        ? settled
+            .map((r) => {
+              const a = r.actual,
+                c = model.calculate(
+                  r,
+                  r.quotes[r.choice],
+                  a.total,
+                  a.accepted,
+                  a.extra,
+                );
+              return (
+                '<button class="feed-item" data-pick="' +
+                esc(r.id) +
+                '"><i>' +
+                esc(r.id.slice(-3)) +
+                "</i><span><strong>" +
+                esc(r.kind) +
+                " " +
+                tons(a.accepted) +
+                "톤 인수</strong><small>고객 " +
+                man(c.savings) +
+                " · 팀 " +
+                man(c.margin) +
+                "</small></span><time>" +
+                dateParts(r.departure).short +
+                "</time></button>"
+              );
+            })
+            .join("")
+        : '<p class="w-sub">정산 완료 반출 없음</p>') +
+      "</div></aside></div></div>"
     );
+  }
+  function todo(status, label, sub, tone, of) {
+    const n = rows.filter((r) => r.status === status).length;
+    return (
+      '<button class="todo-row" data-filter="' +
+      status +
+      '" style="--tone:' +
+      tone +
+      '"><strong>' +
+      label +
+      "</strong><b>" +
+      n +
+      "</b><small>" +
+      sub +
+      '</small><span class="segs">' +
+      Array.from(
+        { length: Math.max(of, 1) },
+        (_, i) => '<i class="' + (i < n ? "on" : "") + '"></i>',
+      ).join("") +
+      "</span></button>"
+    );
+  }
+  function pick(id) {
+    selected = id;
+    $("ops-card").innerHTML = card(rows.find((x) => x.id === id));
+    $("ops-card").style.animation = "none";
+    void $("ops-card").offsetWidth;
+    $("ops-card").style.animation = "";
+    document
+      .querySelectorAll(".bar[data-pick]")
+      .forEach((el) => el.classList.toggle("is-on", el.dataset.pick === id));
+  }
+  function countUp() {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    document.querySelectorAll("[data-count]").forEach((el) => {
+      const end = Number(el.dataset.count),
+        digits = Number(el.dataset.digits),
+        start = performance.now();
+      const step = (now) => {
+        const t = Math.min(1, (now - start) / 1100);
+        el.textContent = (end * (1 - Math.pow(1 - t, 3))).toFixed(digits);
+        if (t < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
   }
   function renderList() {
     const current = view(),
@@ -410,13 +670,13 @@
         svg("search", 25) +
         "<strong>" +
         (term || filter
-          ? "조건에 맞는 반출이 없습니다."
+          ? "조건에 부합하는 반출 없음"
           : isLedger
-            ? "아직 정산한 반출이 없습니다."
-            : "아직 등록한 반출이 없습니다.") +
+            ? "정산 완료 반출 없음"
+            : "등록된 반출 없음") +
         "</strong>" +
         (term || filter
-          ? '<button class="text-btn" data-action="clear">검색 조건 지우기</button>'
+          ? '<button class="text-btn" data-action="clear">검색 조건 초기화</button>'
           : "") +
         "</td></tr>";
     }
@@ -450,6 +710,10 @@
     document.title = "그물마중 · " + views[current];
     $("crumb-view").textContent = views[current];
     $("overview-content").innerHTML = home ? overview() : "";
+    if (home) {
+      if (selected) pick(selected);
+      countUp();
+    }
     $("list-title").textContent = home
       ? "최근 반출"
       : current === "shipments"
@@ -475,9 +739,13 @@
   }
   document.addEventListener("click", (event) => {
     const el = event.target.closest(
-      "[data-action],[data-open],[data-filter],[data-row]",
+      "[data-action],[data-open],[data-filter],[data-row],[data-pick]",
     );
     if (!el) return;
+    if (el.dataset.pick) {
+      pick(el.dataset.pick);
+      return;
+    }
     if (el.dataset.open || el.dataset.row) {
       window.NetForms.open(el.dataset.open || el.dataset.row);
       return;
@@ -504,7 +772,7 @@
         $("guide").close();
         loadRecords();
         render();
-        toast("시연 데이터를 처음 상태로 되돌렸습니다.");
+        toast("시연 데이터 초기 상태 복원 완료");
         break;
       case "all":
         goList();

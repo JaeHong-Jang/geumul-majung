@@ -66,7 +66,7 @@
 
   function errorMessage(form, error) {
     const box = form.querySelector(".sheet-error");
-    box.textContent = error?.message || "입력 내용을 확인해 주세요.";
+    box.textContent = error?.message || "입력 내용 확인 필요";
     box.hidden = false;
     box.scrollIntoView({ block: "nearest" });
   }
@@ -155,7 +155,7 @@
         .find((item) => item.id === record.id);
       if (!current || JSON.stringify(current) !== snapshot) {
         throw new Error(
-          "이 반출 건이 변경됐습니다. 창을 닫고 다시 열어 최신 내용을 확인해 주세요.",
+          "해당 반출 건 변경 감지 · 창 재실행 후 최신 내용 확인 필요",
         );
       }
     }
@@ -176,10 +176,10 @@
 
   async function reducePhoto(file) {
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-      throw new Error("JPG, PNG 또는 WebP 사진을 선택해 주세요.");
+      throw new Error("JPG·PNG·WebP 형식 사진만 선택 가능");
     }
     if (file.size > 12 * 1024 * 1024)
-      throw new Error("12MB 이하 사진을 선택해 주세요.");
+      throw new Error("12MB 이하 사진만 선택 가능");
     const objectUrl = URL.createObjectURL(file);
     try {
       const image = new Image();
@@ -227,6 +227,7 @@
         wide: true,
         maxLength: 400,
       }),
+      checklist(),
       '<label class="field field-wide"><span>현장 사진 (선택)</span><input name="photo" type="file" accept="image/jpeg,image/png,image/webp"></label>',
       '<div class="field-wide" data-preview></div>',
     ].join("");
@@ -234,11 +235,12 @@
       numericField("기존 방식 처리비 (원/톤)", "baseRate", 300000),
       numericField("인수 톤당 운영료 (원)", "feeRate", 40000),
       numericField("건별 팀 직접비 (원)", "directCost", 110000),
+      '<p class="sheet-note field-wide">참고 단가 · 군산시수협 2026 인양쓰레기 기초단가 224,500원/톤(선별·계량·운반·재활용 포함) · 태안군 2026 하반기 폐어망 수거·처리 계약 84,268,800원</p>',
     ].join("");
     const form = show({
       kicker: "삽시도 집하장",
       title: "반출 등록",
-      body: `<div class="sheet-grid">${basics}</div><p class="sheet-note">등록 후 같은 지정 업체의 두 처리 조건을 비교합니다.</p><details class="sheet-section"><summary>시연 비용 가정 조정</summary><div class="sheet-grid finance-grid">${finance}</div></details>`,
+      body: `<div class="sheet-grid">${basics}</div><p class="sheet-note">등록 후 동일 지정 업체의 처리 조건 2안 비교</p><details class="sheet-section"><summary>시연 비용 가정 조정</summary><div class="sheet-grid finance-grid">${finance}</div></details>`,
       action: "반출 등록",
       onSave(current) {
         const data = new FormData(current);
@@ -252,6 +254,7 @@
           weight: estimated,
           departure,
           note: data.get("note").trim(),
+          checks: data.getAll("checks"),
           photo,
           facility: data.get("facility").trim(),
           status: "registered",
@@ -263,7 +266,7 @@
           directCost: Number(data.get("directCost")),
         };
         persist(record);
-        saved(record, "반출 건을 등록했습니다.");
+        saved(record, "반출 건 등록 완료");
       },
     });
     form.elements.photo.addEventListener("change", async (event) => {
@@ -286,13 +289,36 @@
         errorMessage(
           form,
           error?.name === "EncodingError"
-            ? new Error("사진을 읽을 수 없습니다. 다른 파일을 선택해 주세요.")
+            ? new Error("사진 판독 불가 · 다른 파일 선택 필요")
             : error,
         );
       } finally {
         if (revision === photoRevision) submit.disabled = false;
       }
     });
+  }
+
+  // 처리 이력 (어망내망 수거·계량 이력 · 클리어비드 진행 현황 참고)
+  function timeline(record) {
+    const sailed = record.departure.slice(0, 10) <= model().DEMO_DATE;
+    const steps = [
+      ["반출 등록", true],
+      ["인수 조건 확정", record.status !== "registered"],
+      ["출항·하선", record.status !== "registered" && sailed],
+      ["검수·정산", record.status === "settled"],
+    ];
+    return `<ol class="track">${steps
+      .map(([label, done]) => `<li${done ? ' class="done"' : ""}>${label}</li>`)
+      .join("")}</ol>`;
+  }
+
+  function checklist(checks = []) {
+    return `<fieldset class="checks field-wide"><legend>인수 기준 사전 점검 · 미충족 항목은 업체 거절·추가비 사유</legend>${model()
+      .CHECKS.map(
+        (c) =>
+          `<label><input type="checkbox" name="checks" value="${esc(c)}"${checks.includes(c) ? " checked" : ""}> ${esc(c)}</label>`,
+      )
+      .join("")}</fieldset>`;
   }
 
   function shipmentSummary(record) {
@@ -302,6 +328,12 @@
         ["예상 반출량", `${weight(record.weight)} · ${record.bags}마대`],
         ["어구 · 재질", `${record.kind} · ${record.material}`],
         ["지정 처리업체", record.facility],
+        [
+          "사전 점검",
+          record.checks?.length
+            ? `${record.checks.length}/${model().CHECKS.length} · ${record.checks.join(", ")}`
+            : "미기록",
+        ],
       ]) +
       (record.note
         ? `<p class="sheet-note">현장 메모 · ${esc(record.note)}</p>`
@@ -338,11 +370,16 @@
   }
 
   function quoteStep(record, snapshot) {
+    const heavy = record.weight > 1;
     const body =
+      timeline(record) +
       section("반출 정보", shipmentSummary(record)) +
+      (heavy
+        ? `<p class="sheet-note notice">1톤 초과 반입 · 업체 신청 기한 ${esc(window.NetUI.when(model().noticeBy(record.departure)))}(출항 24시간 전)</p>`
+        : "") +
       section(
         "지정 업체 인수 조건",
-        `<p class="sheet-note">같은 업체의 두 선별 조건입니다. 예상 총비용에 인수 톤당 운영료 ${amount(record.feeRate)}이 포함됩니다. 초깃값은 시연용 가정입니다.</p>
+        `<p class="sheet-note">동일 업체의 선별 조건 2안 · 예상 총비용에 인수 톤당 운영료 ${amount(record.feeRate)} 포함 · 초깃값은 시연용 가정값</p>
       <div class="quote-comparison" data-comparison aria-live="polite"></div><div class="quote-grid">${record.quotes.map(quoteCard).join("")}</div>`,
       );
     function saveQuotes(form, confirm) {
@@ -352,12 +389,11 @@
       let choice = null;
       if (confirm) {
         const selected = form.querySelector("input[name=choice]:checked");
-        if (!selected)
-          throw new Error("확정할 인수 조건을 하나 선택해 주세요.");
+        if (!selected) throw new Error("확정할 인수 조건 1건 선택 필요");
         choice = Number(selected.value);
         if (quotes[choice].validUntil < record.departure.slice(0, 10)) {
           throw new Error(
-            "선택한 견적이 출항일 전에 만료됩니다. 견적의 유효일을 다시 확인해 주세요.",
+            "선택 견적의 출항일 전 만료 · 견적 유효일 재확인 필요",
           );
         }
       }
@@ -370,9 +406,7 @@
       persist(next, snapshot);
       saved(
         next,
-        confirm
-          ? "출항 전 인수 조건을 확정했습니다."
-          : "인수 조건 초안을 저장했습니다.",
+        confirm ? "출항 전 인수 조건 확정 완료" : "인수 조건 초안 저장 완료",
       );
     }
     const form = show({
@@ -402,19 +436,19 @@
           if (next.validUntil >= record.departure.slice(0, 10))
             options.push({ label: quote.label, cost: totals.cost });
         } catch {
-          output.textContent = "비용을 계산하려면 물량과 단가를 확인해 주세요.";
+          output.textContent = "비용 산출을 위한 물량·단가 확인 필요";
         }
       });
       const comparison = form.querySelector("[data-comparison]");
       if (options.length !== 2) {
         comparison.textContent =
-          "두 견적의 수량·단가와 출항일까지의 유효일을 확인해 주세요.";
+          "두 견적의 수량·단가 및 출항일까지의 유효일 확인 필요";
       } else {
         options.sort((a, b) => a.cost - b.cost);
         const difference = options[1].cost - options[0].cost;
         comparison.textContent = difference
-          ? `예상 총비용은 ‘${options[0].label}’ 조건이 ${amount(difference)} 낮습니다.`
-          : "두 조건의 예상 총비용이 같습니다.";
+          ? `‘${options[0].label}’ 조건의 예상 총비용 ${amount(difference)} 절감`
+          : "두 조건의 예상 총비용 동일";
       }
     };
     form.addEventListener("input", update);
@@ -455,7 +489,7 @@
   function settlementStep(record, snapshot) {
     const quote = record.quotes[record.choice];
     const settled = record.status === "settled";
-    const header = `<details class="sheet-section"><summary>반출 정보와 확정 조건</summary>${shipmentSummary(record)}${confirmedConditions(record, quote)}</details>`;
+    const header = `${timeline(record)}<details class="sheet-section"><summary>반출 정보와 확정 조건</summary>${shipmentSummary(record)}${confirmedConditions(record, quote)}</details>`;
     if (settled) {
       const actual = record.actual;
       const totals = model().calculate(
@@ -472,6 +506,7 @@
           ["최종 인수량", weight(actual.accepted)],
           ["선별·운반 등 추가비", amount(actual.extra ?? quote.extra)],
           ["계량·인수 증빙", actual.reference],
+          ["업체 확인자", actual.signer || "미기록"],
           ["잔재 사유", actual.reason || "전량 인수"],
         ]),
       );
@@ -490,7 +525,7 @@
           header +
           section(
             "검수 입력 전",
-            `<p class="sheet-note">${esc(window.NetUI.when(record.departure))} 출항 후 대천항에서 하선·계량을 마치면 실제 인수량을 입력합니다.</p>`,
+            `<p class="sheet-note">${esc(window.NetUI.when(record.departure))} 출항 후 대천항 하선·계량 완료 시 실제 인수량 입력 가능</p>`,
           ),
       });
       return;
@@ -505,18 +540,20 @@
       }),
       numericField("실제 추가 선별·운반비 (원/건)", "extra", quote.extra),
       field("계량·인수 증빙번호", "reference", "", { maxLength: 100 }),
+      field("업체 확인자", "signer", "", { maxLength: 40 }),
       field("잔재 발생 사유", "reason", "", {
         type: "textarea",
         required: false,
         maxLength: 350,
         wide: true,
       }),
+      '<label class="agree field-wide"><input type="checkbox" name="agree" required> 계량표·인수 내역 집하장·업체 상호 대조 완료</label>',
     ].join("");
     const body =
       header +
       section(
         "검수 입력",
-        `<p class="sheet-note">${esc(record.facility)} · ${esc(quote.label)}. 입력된 중량은 견적 예상치이므로 실측값으로 확인해 주세요.</p><div class="sheet-grid">${fields}</div>`,
+        `<p class="sheet-note">${esc(record.facility)} · ${esc(quote.label)} · 입력 중량은 견적 예상치이므로 실측값 확인 필요</p><div class="sheet-grid">${fields}</div>`,
       ) +
       section("예상 정산 내역", '<div data-results aria-live="polite"></div>');
     const form = show({
@@ -532,12 +569,13 @@
           extra: number("extra"),
           reference: current.elements.reference.value.trim(),
           reason: current.elements.reason.value.trim(),
+          signer: current.elements.signer.value.trim(),
         };
         if (actual.accepted < actual.total && !actual.reason)
-          throw new Error("인수하지 못한 물량의 사유를 적어 주세요.");
+          throw new Error("미인수 물량의 사유 기재 필요");
         const next = { ...record, status: "settled", actual };
         persist(next, snapshot);
-        saved(next, "실제 인수량으로 정산을 확정했습니다.");
+        saved(next, "실제 인수량 기준 정산 확정 완료");
       },
     });
     const update = () => {
@@ -554,8 +592,7 @@
           model().calculate(record, quote, total, accepted, extra),
         );
       } catch {
-        target.textContent =
-          "계량한 전체 반출량과 그 범위 안의 인수량을 입력해 주세요.";
+        target.textContent = "계량 총 반출량 및 그 범위 내 인수량 입력 필요";
       }
     };
     form.addEventListener("input", update);
@@ -567,7 +604,7 @@
       .records()
       .find((item) => item.id === id);
     if (!record) {
-      app().toast("반출 건을 찾을 수 없습니다.");
+      app().toast("해당 반출 건 조회 불가");
       return;
     }
     const snapshot = JSON.stringify(record);
