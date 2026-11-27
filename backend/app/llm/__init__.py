@@ -6,7 +6,7 @@ import os
 from app.llm.base import DEADLINE_S, LLMProvider, LLMReply, call_with_deadline
 from app.tools.data import load_harness
 
-__all__ = ["LLMProvider", "LLMReply", "get_provider", "llm_settings", "provider_health", "provider_info"]
+__all__ = ["LLMProvider", "LLMReply", "get_provider", "get_vision_provider", "llm_settings", "provider_health", "provider_info"]
 
 
 def llm_settings() -> dict:
@@ -32,6 +32,25 @@ def get_provider(name: str | None = None) -> LLMProvider | None:
         from app.llm.claude import ClaudeProvider
         c = cfg["claude"]
         return ClaudeProvider(c["model"], c.get("max_tokens", 2000), _deadline(cfg))
+    if name == "mock":
+        from app.llm.mock import MockProvider
+        return MockProvider()
+    return None
+
+
+def get_vision_provider():
+    """사진 읽기용 공급자. 환경변수 VISION_PROVIDER(claude | ollama | mock | off, 기본 off)와 VISION_MODEL.
+    글 LLM과 따로 고른다(로컬 글 모델은 사진을 못 읽는 경우가 많다)."""
+    cfg = llm_settings()
+    name = (os.environ.get("VISION_PROVIDER") or (cfg.get("vision") or {}).get("provider") or "off").lower()
+    model = os.environ.get("VISION_MODEL") or (cfg.get("vision") or {}).get("model")
+    if name == "claude":
+        from app.llm.claude import ClaudeProvider
+        return ClaudeProvider(model or cfg["claude"]["model"], cfg["claude"].get("max_tokens", 2000), max(_deadline(cfg), 60))
+    if name == "ollama" and model:
+        from app.llm.ollama import OllamaProvider
+        o = cfg["ollama"]
+        return OllamaProvider(os.environ.get("OLLAMA_URL") or o["url"], model, 120, max(_deadline(cfg), 120))
     if name == "mock":
         from app.llm.mock import MockProvider
         return MockProvider()

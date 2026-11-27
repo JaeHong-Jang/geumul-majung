@@ -15,6 +15,9 @@ class MockProvider:
         self.fail = fail
         self.calls: list[tuple[str, str, dict | None]] = []
 
+    def see(self, system: str, user: str, images: list, schema: dict | None = None) -> LLMReply:
+        return self.chat(system, user, schema)
+
     def chat(self, system: str, user: str, schema: dict | None = None) -> LLMReply:
         self.calls.append((system, user, schema))
         if self.fail:

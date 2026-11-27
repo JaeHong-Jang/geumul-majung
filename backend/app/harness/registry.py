@@ -21,6 +21,11 @@ MODULES = {
     "want_intake": "app.agents.trade.want_intake",
     "want_price": "app.agents.trade.want_price",
     "want_match": "app.agents.trade.want_match",
+    "gm_intake": "app.agents.gm.intake",
+    "gm_check": "app.agents.gm.check",
+    "gm_scan": "app.agents.gm.scan",
+    "gm_grade": "app.agents.gm.grade",
+    "gm_docs": "app.agents.gm.docs",
 }
 
 

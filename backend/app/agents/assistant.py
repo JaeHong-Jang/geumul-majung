@@ -54,18 +54,29 @@ def _generic_bigrams() -> frozenset[str]:
     return frozenset(b for b, n in count.items() if n > len(laws) / 3)
 
 
+@lru_cache(maxsize=1)
+def _keyword_weight() -> dict[str, int]:
+    """쉬운 문구 낱말의 가중치. 여러 조문에 붙은 낱말(폐어망, 폐어구 등)은 어느 조문에나 맞으므로 1점, 세 조문 이하에만 붙은 낱말은 3점."""
+    count = Counter(k for v in law_plain().values() for k in set(v["keywords"]))
+    return {k: 3 if n <= 3 else 1 for k, n in count.items()}
+
+
 def law_matches(question: str, limit: int = 3) -> list[dict]:
     """낱말이 많이 맞는 조문 최대 limit개. 쉬운 문구의 낱말이 맞으면 3점, 질문의 '제N조'가 조문 이름에 있으면 가산.
     1등 점수의 절반 미만인 조문은 뺀다(관련 약한 조문을 같이 보여 주지 않는다)."""
-    q_bi = _bigrams(question) - _generic_bigrams()
     q_low = question.lower()
+    # 질문에 나온 쉬운 문구 낱말. 더 긴 낱말 속에 든 짧은 낱말(폐어망 속 어망)은 뺀다
+    said = {k for v in law_plain().values() for k in v["keywords"] if k in q_low}
+    said = {k for k in said if not any(k != m and k in m for m in said)}
+    q_bi = _bigrams(question) - _generic_bigrams()
     cited = {re.sub(r"\s", "", m) for m in re.findall(r"제\s*\d+\s*조", question)}
     plain = law_plain()
     scored = []
     for order, a in enumerate(load_json("law_articles.json")):
         text = _article_text(a)
         score = len(q_bi & _bigrams(text)) + 3 * sum(1 for c in cited if c in re.sub(r"\s", "", a["article"]))
-        score += 3 * sum(1 for k in plain[a["id"]]["keywords"] if k in q_low)
+        weight = _keyword_weight()
+        score += sum(weight[k] for k in plain[a["id"]]["keywords"] if k in said)
         if score:
             scored.append((-score, order, a))
     scored.sort(key=lambda x: x[:2])

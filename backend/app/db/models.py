@@ -437,3 +437,29 @@ class OrderTerms(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     order_id: Mapped[int] = mapped_column(ForeignKey("orders.id"), unique=True)
     freight_payer: Mapped[str] = mapped_column(String, default="buyer")   # buyer | seller
+
+
+class GmShipment(Base):
+    """그물마중 반출 한 건. data는 화면(model.js·Model.swift)이 쓰는 기록 모양 그대로 둔다(docs/GEUMUL_API.md)."""
+    __tablename__ = "gm_shipments"
+    id: Mapped[str] = mapped_column(String, primary_key=True)          # SS-2611-006
+    data: Mapped[dict] = mapped_column(JSON)
+    status: Mapped[str] = mapped_column(String, index=True)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class GmScan(Base):
+    """그물마중 문서 사진(계량증명서 등)과 읽은 초안. 원본 사진은 지우지 않는다. status: draft | confirmed | rejected."""
+    __tablename__ = "gm_scans"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    shipment_id: Mapped[str] = mapped_column(String, index=True)
+    kind: Mapped[str] = mapped_column(String, default="계량증명서")
+    media_type: Mapped[str] = mapped_column(String)
+    image: Mapped[bytes] = deferred(mapped_column(LargeBinary))
+    result: Mapped[dict] = mapped_column(JSON)
+    status: Mapped[str] = mapped_column(String, default="draft")
+    uploaded_by: Mapped[int] = mapped_column(ForeignKey("companies.id"))
+    confirmed_by: Mapped[int | None] = mapped_column(ForeignKey("companies.id"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)

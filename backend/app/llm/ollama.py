@@ -39,6 +39,22 @@ class OllamaProvider:
             data = json.loads(text)
         return LLMReply(text=text, data=data, model=self.model, ms=int((time.monotonic() - t0) * 1000))
 
+    def see(self, system: str, user: str, images: list[tuple[str, str]], schema: dict | None = None) -> LLMReply:
+        """사진 읽기(사진을 받는 모델일 때만, 예: qwen2.5vl). images = [(media_type, base64)]."""
+        def go():
+            body = {"model": self.model, "stream": False, "options": {"temperature": 0},
+                    "messages": [{"role": "system", "content": system},
+                                 {"role": "user", "content": user, "images": [b64 for _, b64 in images]}]}
+            if schema:
+                body["format"] = schema
+            t0 = time.monotonic()
+            r = httpx.post(f"{self.url}/api/chat", json=body, timeout=httpx.Timeout(self.timeout_s, connect=min(3, self.timeout_s)))
+            r.raise_for_status()
+            text = r.json()["message"]["content"]
+            return LLMReply(text=text, data=json.loads(text) if schema else None, model=self.model,
+                            ms=int((time.monotonic() - t0) * 1000))
+        return call_with_deadline(go, self.deadline_s)
+
     def reachable(self) -> bool:
         try:
             return httpx.get(f"{self.url}/api/tags", timeout=3).status_code == 200

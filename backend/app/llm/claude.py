@@ -39,3 +39,9 @@ class ClaudeProvider:
         text = next((b.text for b in resp.content if b.type == "text"), "")
         data = json.loads(text) if schema else None
         return LLMReply(text=text, data=data, model=self.model, ms=int((time.monotonic() - t0) * 1000))
+
+    def see(self, system: str, user: str, images: list[tuple[str, str]], schema: dict | None = None) -> LLMReply:
+        """사진 읽기. images = [(media_type, base64)]. 계량증명서 같은 문서 사진에 쓴다."""
+        content = [{"type": "image", "source": {"type": "base64", "media_type": mt, "data": b64}} for mt, b64 in images]
+        content.append({"type": "text", "text": user})
+        return call_with_deadline(lambda: self._chat(system, content, schema), self.deadline_s)

@@ -23,6 +23,9 @@ from app.features.buyer.router import router as buyer
 from app.features.buy_requests.router import router as buy_requests
 from app.features.sellers.router import router as sellers
 from app.features.companies.router import router as companies
+from app.features.gm.ai import router as gm_ai
+from app.features.gm.trade import router as gm_trade
+from app.features.gm.router import router as gm
 from app.features.handover.router import router as handover
 from app.features.inquiries.router import router as inquiries
 from app.features.listings.router import router as listings
@@ -98,7 +101,7 @@ async def conflict(request: Request, exc: IntegrityError):
 
 for router in (auth, companies, bags, listings, orders, handover, ratings, market, buyer, seller,
                notifications, support, pools, recyclers, inquiries, messages, agent_runs, assistant, knowledge,
-               buy_requests, sellers):
+               buy_requests, sellers, gm, gm_ai, gm_trade):
     app.include_router(router)
 
 

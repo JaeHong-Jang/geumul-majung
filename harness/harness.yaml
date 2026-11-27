@@ -25,6 +25,9 @@ teams:
   - id: review
     name: "평가, 규제 팀"
     agents: [economics, regulation]
+  - id: gm
+    name: 그물마중 반출 팀
+    agents: [gm_intake, gm_check, gm_scan, gm_grade, gm_docs]
 
 agents:
   - {id: orchestrator, team: command, no: 0, name: 지휘 AI, card: agents/orchestrator.md, llm: true}
@@ -41,6 +44,11 @@ agents:
   - {id: want_intake, team: trade, no: 11, name: 구매 희망 정리, card: agents/trade/want_intake.md, llm: true}
   - {id: want_price, team: trade, no: 12, name: 희망가 추천, card: agents/trade/want_price.md, llm: false}
   - {id: want_match, team: trade, no: 13, name: 판매 매물 맞추기, card: agents/trade/want_match.md, llm: false}
+  - {id: gm_intake, team: gm, no: 14, name: 말로 반출 등록, card: agents/gm/intake.md, llm: false}
+  - {id: gm_check, team: gm, no: 15, name: 반출 법 점검, card: agents/gm/check.md, llm: true}
+  - {id: gm_scan, team: gm, no: 16, name: 계량증명서 읽기, card: agents/gm/scan.md, llm: true}
+  - {id: gm_grade, team: gm, no: 17, name: 판매 가능 판정, card: agents/gm/grade.md, llm: false}
+  - {id: gm_docs, team: gm, no: 18, name: 서류 안내와 초안, card: agents/gm/docs.md, llm: false}
 
 # 앱 이벤트 → 실행할 에이전트 순서. 순서는 규칙(이 파일)이 정하고 LLM은 바꾸지 않는다.
 flows:
@@ -54,6 +62,11 @@ flows:
   want_intake: [want_intake, want_price, want_match]   # 구매 희망 말 입력(음성 인식 글) → 칸 채우기, 희망가 추천, 판매 매물 맞추기
   want_price: [want_price]                      # 구매 희망에서 재질을 고르면 희망가 추천
   want_match: [want_match]                      # 구매 희망 칸(재질, 수량, 상한가)이 바뀌면 판매 매물 맞추기
+  gm_intake: [gm_intake]                        # 그물마중: 집하장 담당자의 말(음성 인식 글) → 반출 등록 칸
+  gm_check: [gm_check]                          # 그물마중: 반출 한 건의 법 조문, 현장 점검 목록
+  gm_scan: [gm_scan]                            # 그물마중: 계량증명서 사진 → 칸 초안과 검산(사람 확인 전 정산 미반영)
+  gm_grade: [gm_grade]                          # 그물마중: 떼어 놓은 묶음이 팔 수 있는 원료인지, 무엇을 해야 하나, 누가 사나
+  gm_docs: [gm_docs]                            # 그물마중: 반출 단계별 필요한 서류와 초안
 
 gates:
   - id: evidence      # 주장마다 근거 1개 이상, law 근거는 law_articles.json에 있는 id, 숫자 있는 주장은 dataset/calc/input/assumption/law 근거
@@ -78,7 +91,16 @@ assumptions:
     알루미늄: [알미늄, 알루미늄캔, 알루미늄 캔, aluminum, aluminium, alu]    # 알루미늄캔
     골판지: [폐골판지, 박스, 종이박스, 골판지 박스, 폐박스, corrugated]        # 폐골판지
     구리: [구리선, 동 스크랩, 동스크랩, copper]                   # 시세 품목 없음(공개 시세 표에 구리가 없음)
+    # 폐어구 재질(그물마중). 근거: research_notes 2_시세_비용.md (가) 어구→재질 대응표(FAO·IMO 2023)
+    나일론: [나이론, 나일론6, 폴리아미드, pa, pa6, nylon, 나일론 그물, 나일론그물]   # 자망 그물감. 공개 시세 없음(견적 필요)
+    eps: [스티로폼, 스티로폴, 발포폴리스티렌, 발포스티렌]                         # 스티로폼 부표. 시세 품목 EPS 잉고트(감용 후 기준)
+    납: [납추, 봉돌, 납줄, 납심, lead]                                          # 자망 발줄. 국제 납 가격(metal_prices.json)
   code_materials:           # 품목 코드 → 해당하는 표준 재질(재질 추천 후보). 하나뿐이면 바로 채운다
+    51-03-08: [나일론, pe, pp]      # 폐어망: 자망은 나일론, 통발·끌그물은 pe, 줄은 pp
+    51-03-05: [eps]                 # 양식용폐부자
+    51-03-06: [eps]                 # 폐발포합성수지(스티로폼 부표)
+    91-06-01: [나일론, pe, pp, eps] # 생활폐기물로 배출되는 폐어망·폐로프·폐부자
+    91-05-00: [철]                  # 생활폐기물로 배출되는 통발 철틀
     51-03-01: [pp, pe, abs, ps, pet]
     51-03-03: [pvc]
     51-03-07: [pe, pp, pet]
@@ -98,7 +120,18 @@ assumptions:
     알루미늄: 51-29-02
     골판지: 51-28-02
     구리: 51-29-02
+    나일론: 51-03-08
+    eps: 51-03-06
+    납: 51-29-02
   waste_keywords:           # 말 입력에 이 말이 있으면 그 품목 코드(재질보다 우선, 위에서부터 먼저 찾은 것)
+    어망: 51-03-08          # 폐어구 낱말. 별표 4에 전용 번호가 있는 것은 폐어망(51-03-08), 양식용폐부자(51-03-05)뿐
+    그물: 51-03-08
+    자망: 51-03-08
+    부자: 51-03-05
+    부표: 51-03-06          # 어선 어업용 스티로폼 부표의 번호는 법령에 없음(팀 가정)
+    스티로폼: 51-03-06
+    로프: 51-03-01          # 폐로프 전용 번호 없음(51-03-01 또는 51-27-02, 팀 가정)
+    밧줄: 51-03-01
     포장재: 51-03-07
     합성수지: 51-03-01
     플라스틱: 51-03-01
