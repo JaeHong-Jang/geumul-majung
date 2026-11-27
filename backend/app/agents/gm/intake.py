@@ -89,11 +89,15 @@ def read_fields(text: str, base: date | None = None) -> dict:
     fields = {"kind": _first(KIND_WORDS, t), "material": _first(MATERIAL_WORDS, t), "weight": _weight(t), "bags": _bags(t),
               "departure": f"{day.isoformat()}T{hm or '09:00'}" if day else None,
               "checks": [c for pat, c in CHECK_WORDS if re.search(pat, t)]}
+    fields["packaging"] = ("톤백" if "톤백" in t else "암롤박스" if "암롤" in t else "마대" if fields["bags"] is not None or "마대" in t
+                           else "더미" if re.search(r"더미|쌓아|그냥\s*쌓", t) else None)
+    if fields["packaging"] == "더미" and fields["bags"] is None:
+        fields["bags"] = 0
     fields["timeGuessed"] = bool(day and not hm)
     return fields
 
 
-LABEL = {"kind": "어구 종류", "material": "재질", "weight": "예상 반출량", "bags": "마대 수", "departure": "출항 예정 일시"}
+LABEL = {"kind": "어구 종류", "material": "재질", "weight": "예상 반출량", "packaging": "담는 방식", "departure": "출항 예정 일시"}
 
 
 def run(ctx: dict, llm=None) -> AgentResult:
@@ -107,8 +111,10 @@ def run(ctx: dict, llm=None) -> AgentResult:
         got.append(f"재질 {f['material']}")
     if f["weight"] is not None:
         got.append(f"{f['weight']:g}톤")
-    if f["bags"] is not None:
-        got.append(f"마대 {f['bags']}개")
+    if f["packaging"] == "더미":
+        got.append("포장 없는 더미")
+    elif f["bags"] is not None:
+        got.append(f"{f['packaging'] or '마대'} {f['bags']}개")
     if f["departure"]:
         got.append(f"출항 {f['departure'].replace('T', ' ')}")
     claims = []

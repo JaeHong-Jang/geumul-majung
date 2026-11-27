@@ -38,6 +38,8 @@ def test_말로_반출_등록_칸을_채우고_빈칸은_묻는다(real, ids):
     assert (f["kind"], f["material"], f["weight"], f["bags"], f["departure"]) == ("폐자망", "나일론", 5.0, 12, "2026-11-30T08:30")
     assert f["checks"] == ["부착 로프 분리"]
     assert any(s["id"] == "gm_intake" for s in r.json()["steps"])
+    heap = real.post("/v1/gm/intake", json={"text": "통발 그물 3톤 그냥 더미로 쌓아 둠 내일"}, headers=H(ids["site"])).json()["fields"]
+    assert (heap["packaging"], heap["bags"]) == ("더미", 0)
     part = real.post("/v1/gm/intake", json={"text": "통발 그물 내일"}, headers=H(ids["site"])).json()
     assert any("직접 입력 필요" in x["text"] for x in part["facts"])
     assert any("오전 9시" in x["text"] for x in part["facts"])
@@ -48,6 +50,8 @@ def test_반출_법_점검은_조문_근거가_붙는다(real, ids):
     r = real.get("/v1/gm/shipments/SS-2611-005/checklist", headers=H(ids["op"])).json()     # 폐통발 그물, 혼합 재질
     items = {i["item"]: i for i in r["items"]}
     assert {"waste_class", "carrier", "handover", "ledger", "deposit", "rope", "material", "notice"} <= set(items)
+    four = {i["item"] for i in real.get("/v1/gm/shipments/SS-2611-004/checklist", headers=H(ids["op"])).json()["items"]}
+    assert "contract" in four                                          # 도 운반선, 처리 계약 미확인
     assert items["carrier"]["law"] == ["wma-rule-66-6-11", "wma-46", "wma-25"]
     assert items["rope"]["ok"] is False and "아직 로프 분리 전" in items["rope"]["text"]
     assert items["notice"]["text"].endswith("2026-11-29 09:00까지 해야 함")

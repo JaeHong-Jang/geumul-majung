@@ -152,3 +152,29 @@ def test_시연_초기화(client, ids):
     assert len(client.get("/v1/gm/shipments", headers=op).json()) == 7
     assert client.post("/v1/gm/demo/reset", headers=H(ids["rec"])).status_code == 403
     assert client.post("/v1/gm/demo/reset", headers=op).json()["count"] == 6
+
+
+def test_담는_방식과_운반_정보(client, ids):
+    site, op = H(ids["site"]), H(ids["op"])
+    base = {"kind": "폐어망", "material": "나일론", "weight": 2, "departure": "2026-11-28T09:00"}
+    assert client.post("/v1/gm/shipments", json={**base, "packaging": "더미", "bags": 0}, headers=site).status_code == 201
+    bad = client.post("/v1/gm/shipments", json={**base, "packaging": "톤백", "bags": 0}, headers=site)
+    assert bad.status_code == 400 and "톤백이면 1 이상" in bad.json()["detail"]
+    s = client.get("/v1/gm/shipments/SS-2611-006", headers=op).json()
+    assert s["packaging"] == "마대" and s["route"]["mode"] == "시 용역 바지선" and s["route"]["landingPort"] == "대천항"
+    assert client.get("/v1/gm/shipments/SS-2611-005", headers=op).json()["packaging"] == "더미"
+
+
+def test_결항_연기(client, ids):
+    op = H(ids["op"])
+    r = client.post("/v1/gm/shipments/SS-2611-004/route", json={"status": "연기", "delayedTo": "2026-12-03"}, headers=op)
+    assert r.status_code == 200, r.text
+    s = r.json()                               # 확정 건, 견적 유효일(12-01)보다 늦어져 다시 협의로
+    assert s["departure"] == "2026-12-03T08:30" and s["status"] == "registered" and s["choice"] is None
+    assert s["route"]["delayedFrom"] == "2026-12-01T08:30" and "재협의" in s["history"][-1]["action"]
+    ok = client.post("/v1/gm/shipments/SS-2611-006/route", json={"status": "결항", "reason": "기상 악화"}, headers=op).json()
+    assert ok["route"]["status"] == "결항" and ok["status"] == "confirmed"
+    assert client.post("/v1/gm/shipments/SS-2611-005/route", json={"status": "연기", "delayedTo": "2026-11-01"},
+                       headers=op).status_code == 400
+    assert client.post("/v1/gm/shipments/SS-2611-002/route", json={"status": "결항"}, headers=op).status_code == 409
+    assert client.post("/v1/gm/shipments/SS-2611-006/route", json={"status": "결항"}, headers=H(ids["rec"])).status_code == 403

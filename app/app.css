@@ -1285,3 +1285,6 @@ dialog ol {
 .offer-form .field span { flex: 0 0 auto; }
 .ai-row:has(.btn.sm) { justify-content: flex-end; }
 .btn.sm { flex: 0 0 auto; padding: 8px 16px; font-size: 14px; box-shadow: none; }
+/* 정보 목록: 이름 칸은 줄바꿈하지 않고, 긴 값만 여러 줄로 */
+.kv dt { white-space: nowrap; flex: none; }
+.kv dd { min-width: 0; overflow-wrap: anywhere; }

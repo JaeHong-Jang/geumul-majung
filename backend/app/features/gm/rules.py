@@ -11,6 +11,10 @@ from datetime import date, datetime, timedelta
 # 사전 점검 항목 이름은 웹·iOS 화면이 보내는 값과 글자까지 같아야 한다(가운뎃점 포함)
 CHECKS = ["부착 로프 분리", "금속 고리·추 제거", "패각·진흙 등 이물 제거", "재질 표본 사진 확보"]
 STATUSES = ("registered", "confirmed", "settled")
+# 담는 방식(삽시도 집하장은 포장 없는 더미가 기본)과 운반 경로. model.js와 같은 값
+PACKS = ("더미", "마대", "톤백", "암롤박스")
+ROUTES = ("시 용역 바지선", "도 운반선", "육상 차량", "미정")
+ROUTE_STATUS = ("예정", "결항", "연기", "완료")
 MAX_SAFE = 2**53 - 1
 PHOTO_RE = re.compile(r"^data:image/(?:jpeg|png|webp|gif);base64,[A-Za-z0-9+/]+=*$")
 DEPARTURE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d$")
@@ -120,9 +124,20 @@ def verify(r: dict) -> dict:
         raise RuleError("반출 기록 확인 필요")
     for key, title in {"id": "반출 번호", "kind": "어구 종류", "material": "재질", "facility": "처리업체"}.items():
         require_text(r.get(key), title)
-    bags = r.get("bags")
-    if not isinstance(bags, int) or isinstance(bags, bool) or bags < 1:
-        raise RuleError("마대 수: 1 이상의 정수 입력 필요")
+    pack = r.get("packaging") or "마대"          # 예전 기록은 마대
+    if pack not in PACKS:
+        raise RuleError("담는 방식 확인 필요")
+    bags, least = r.get("bags"), 0 if pack == "더미" else 1
+    if not isinstance(bags, int) or isinstance(bags, bool) or bags < least:
+        raise RuleError("개수: 0 이상의 정수 입력 필요" if pack == "더미" else f"개수: {pack}이면 1 이상의 정수 입력 필요")
+    route = r.get("route")
+    if route is not None:
+        if not isinstance(route, dict) or route.get("mode") not in ROUTES:
+            raise RuleError("운반 경로 확인 필요")
+        if route.get("status") is not None and route["status"] not in ROUTE_STATUS:
+            raise RuleError("운항 상태 확인 필요")
+        if any(route.get(k) is not None and not isinstance(route[k], str) for k in ("vessel", "landingPort", "contract", "reason")):
+            raise RuleError("운반 정보 확인 필요")
     positive_weight(r.get("weight"), "예상 중량")
     dep = r.get("departure")
     if not isinstance(dep, str) or not DEPARTURE_RE.match(dep):
@@ -193,6 +208,20 @@ def allocate_id(ids: list[str], when: str | None = None) -> str:
     return f"{prefix}{seq + 1:03d}"
 
 
+PACK = {"SS-2611-006": ("마대", 12), "SS-2611-005": ("더미", 0), "SS-2611-004": ("마대", 10), "SS-2611-003": ("더미", 0),
+        "SS-2611-002": ("마대", 11), "SS-2611-001": ("더미", 0)}
+
+
+def route_of(id_: str, status: str) -> dict:
+    """시연 운반 정보(model.js routeOf와 같음). 2026 보령 도서지역 정화사업은 계약 업체가 예선·대선으로 대천항까지 옮기고
+    낙찰 업체 처리장에서 처리한다(05_리서치 수거 구조 확인 1절 5-2)."""
+    if id_ == "SS-2611-004":
+        return {"mode": "도 운반선", "vessel": "늘푸른충남호(충남도 직영)", "landingPort": "대천항(추정)",
+                "contract": "미확인(하역 뒤 처리 계약 확인 필요)", "status": "예정"}
+    return {"mode": "시 용역 바지선", "vessel": "예선, 대선(계약 업체)", "landingPort": "대천항",
+            "contract": "2026 보령 도서지역 해양쓰레기 정화사업(공동도급)", "status": "완료" if status == "settled" else "예정"}
+
+
 _LOTS = [
     ("SS-2611-006", "폐자망", "나일론", 5, 12, "2026-11-27T08:30", "confirmed", "로프 분리 후 그물을 마대별로 결속해 인계함",
      ["부착 로프 분리", "금속 고리·추 제거"], None),
@@ -213,7 +242,9 @@ def seed() -> list[dict]:
         r = {"id": id_, "kind": kind, "material": mat, "weight": w, "bags": bags, "departure": dep, "status": status,
              "note": note, "photo": None, "facility": "보령 지정 재활용업체 (가상)", "actual": copy.deepcopy(actual),
              "baseRate": 300000, "feeRate": 40000, "directCost": 110000,
-             "choice": None if status == "registered" else 1, "quotes": defaults(w, dep)}
+             "choice": None if status == "registered" else 1, "quotes": defaults(w, dep),
+             "packaging": PACK[id_][0], "route": route_of(id_, status)}
+        r["bags"] = PACK[id_][1]
         if checks is not None:
             r["checks"] = checks
         if id_ in SEED_SALES:

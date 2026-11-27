@@ -33,6 +33,16 @@ def run(ctx: dict, llm=None) -> AgentResult:
         add("deposit", None, claim(ID, "통발과 자망 그물은 보증금 대상이라 보증금 표식이 붙은 어구는 따로 반납해야 보증금을 돌려받음, 반출 전 표식 확인 필요",
                                    "fact", ev("law", "fa-81", "어구 보증금")))
 
+    route = r.get("route") or {}
+    if not route or route.get("mode") == "미정":
+        add("route", False, claim(ID, "운반 경로(시 용역 바지선, 도 운반선 등)가 정해지지 않아 배편과 하역항 확인 필요", "question",
+                                  ev("input", "shipment.route")))
+    elif "미확인" in str(route.get("contract") or "") or not route.get("contract"):
+        add("contract", False, claim(ID, f"운반 경로({route['mode']}) 물량의 처리 계약이 확인되지 않아 하역 뒤 처리장과 비용 부담 주체 확인 필요",
+                                     "question", ev("input", "shipment.route")))
+    if route.get("status") in ("결항", "연기"):
+        add("sailing", False, claim(ID, f"배편 {route['status']}, 업체 반입 일정과 견적 유효일 다시 확인 필요", "question",
+                                    ev("input", "shipment.route.status")))
     rope = "부착 로프 분리" in checks
     quotes = r.get("quotes") or []
     if len(quotes) >= 2 and r.get("weight"):

@@ -34,9 +34,10 @@
 
 | 칸 | 뜻 | 쓰는 단계 |
 |---|---|---|
+| `packaging` | `더미·마대·톤백·암롤박스`. 더미면 `bags`는 0 가능, 없으면 마대로 본다 | 완료(11-28) |
+| `route` | `{mode: 시 용역 바지선·도 운반선·육상 차량·미정, vessel, landingPort, contract, status: 예정·결항·연기·완료, reason, delayedFrom}` | 완료(11-28) |
 | `site` | 집하장 이름(기본 "삽시도 집하장") | 1단계 |
 | `history[]` | `{at, by, role, action, before, after}` 수정 이력 | 1단계 |
-| `packaging` | `더미·마대·톤백·암롤`. 없으면 `bags`가 마대 수 | 1단계 |
 | `origin` | `쓰다가 배출·조업 중 인양·침적 수거·해안 수거·모름`. 건진 것은 재생 원료가 못 됨 | 1단계 |
 | `intake` | `{text, photos[], fields{}, sources{}}` 사진·음성 입력이 채운 값과 출처(말·사진·직접 입력) | 2단계 |
 | `scans[]` | `{id, kind, fields{}, checks[], status}` 계량증명서 등 문서 사진에서 읽은 초안 | 2단계 |
@@ -56,6 +57,7 @@
 | 1 | `POST /v1/gm/shipments` | 집하장 | 등록. 서버가 반출번호와 기본 조건 2개를 만듦 |
 | 1 | `PUT /v1/gm/shipments/{id}/quotes` | 운영 | 조건 수정 |
 | 1 | `POST /v1/gm/shipments/{id}/confirm` | 운영 | 조건 확정 `{choice}` |
+| 1 | `POST /v1/gm/shipments/{id}/route` | 집하장·운영 | 운반 정보와 운항 상태. 연기면 `delayedTo`로 출항일을 옮기고, 확정 견적 유효일을 넘으면 재협의로 되돌림 |
 | 1 | `POST /v1/gm/shipments/{id}/preview` | 운영·업체 | 정산 미리보기(저장 안 함) |
 | 1 | `POST /v1/gm/shipments/{id}/settle` | 업체 | 계량값·증빙번호로 정산 |
 | 1 | `GET /v1/gm/summary` | 모두 | 대시보드 숫자(전체 건수, 예정 중량, 누적 인수, 인수율, 고객 절감 합계) |

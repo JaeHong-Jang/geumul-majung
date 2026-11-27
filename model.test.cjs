@@ -119,3 +119,17 @@ test("오프라인 브라우저용 전역 API와 독립된 시연 데이터, 중
   lots[0].quotes[1].rate = 1;
   assert.equal(model.seed()[0].quotes[1].rate, 180000);
 });
+
+test("담는 방식은 더미면 개수 0을 허용하고, 운반 경로를 검증한다", () => {
+  const lots = model.seed();
+  const heap = lots.find((r) => r.packaging === "더미");
+  assert.equal(model.packLabel(heap), "더미");
+  assert.equal(model.packLabel(lots[0]), "12마대");
+  model.verify({ ...heap, bags: 0 });
+  assert.throws(() => model.verify({ ...heap, packaging: "톤백", bags: 0 }), /톤백이면 1 이상/);
+  assert.throws(() => model.verify({ ...heap, packaging: "상자" }), /담는 방식/);
+  const { packaging, ...old } = lots[0]; // 예전 기록(담는 방식 없음)은 마대로 본다
+  assert.equal(model.packLabel(old), "12마대");
+  assert.equal(model.routeFor("도 운반선").vessel, "늘푸른충남호(충남도 직영)");
+  assert.throws(() => model.verify({ ...heap, route: { mode: "헬기" } }), /운반 경로/);
+});

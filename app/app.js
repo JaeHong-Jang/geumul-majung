@@ -112,7 +112,7 @@
   function row(r) {
     return `<a class="card rowcard" href="#/s/${esc(r.id)}">${statusIcon(r.status)}<div class="grow">
       <div class="between"><b class="mono">${esc(r.id)}</b>${badge(r.status)}</div>
-      <div class="muted">${esc(r.kind)} · ${esc(r.material)} · ${r.bags}마대</div>
+      <div class="muted">${esc(r.kind)} · ${esc(r.material)} · ${esc(M.packLabel(r))}</div>
       <div class="between small"><span class="muted">📅 ${when(r.departure)}</span><b class="blue">${tons(r.weight)}</b></div></div></a>`;
   }
   function settleRow(r, bare) {
@@ -569,6 +569,17 @@
       (skip.length ? `<details class="ai-more"><summary>지금 단계에선 필요 없음 ${skip.length}종</summary><ul class="ai-check">${skip.map(li).join("")}</ul></details>` : "")
     );
   };
+  function routeEdit(r) {
+    if (!online) return "";
+    return group(
+      "배편·결항 기록",
+      `<div id="route-box"><label class="field"><span>운항 상태</span><select name="rt-status">${opt(M.ROUTE_STATUS, r.route?.status || "예정")}</select></label>
+      ${field("연기한 출항일", "rt-date", "", "date")}
+      ${field("사유", "rt-reason", r.route?.reason || "", "text", 'maxlength="60" placeholder="예: 기상 악화"')}
+      <div class="ai-row"><button type="button" class="btn ghost sm" data-act="route-save">운항 상태 저장</button></div></div>`,
+      "연기하면 출항일이 바뀌고, 확정한 견적 유효일을 넘으면 업체와 다시 협의 단계로 돌아감",
+    );
+  }
   function docsSection(r) {
     if (!online) return "";
     return group(
@@ -597,12 +608,19 @@
         `<p class="empty">해당 반출 건 조회 불가</p>`
       );
     const head = `<div class="dhead"><div class="between start"><div><small>${esc(r.id)}</small><h2>${esc(r.kind)} · ${esc(r.material)}</h2></div><span class="dicon">${ICON[r.status]}</span></div>
-      <div class="between end"><div class="big">${nf(3).format(r.weight)}<small>톤 · ${r.bags}마대</small></div><span class="glass">${NAMES[r.status]}</span></div>${track(r)}</div>`;
+      <div class="between end"><div class="big">${nf(3).format(r.weight)}<small>톤 · ${esc(M.packLabel(r))}</small></div><span class="glass">${NAMES[r.status]}</span></div>${track(r)}</div>`;
     const info = group(
       "반출 정보",
       kv([
         ["반출 예정", when(r.departure)],
-        ["예상 반출량", `${tons(r.weight)} · ${r.bags}마대`],
+        ["예상 반출량", `${tons(r.weight)} · ${M.packLabel(r)}`],
+        ...(r.route
+          ? [
+              ["운반", `${r.route.mode}${r.route.vessel ? " · " + r.route.vessel : ""}${r.route.landingPort ? " → " + r.route.landingPort : ""}`],
+              ["운항 상태", `${r.route.status || "예정"}${r.route.delayedFrom ? ` (원래 ${when(r.route.delayedFrom)})` : ""}${r.route.reason ? " · " + r.route.reason : ""}`, ["결항", "연기"].includes(r.route.status) ? "neg" : ""],
+              ["적용 계약", r.route.contract || "미확인"],
+            ]
+          : []),
         ["어구 · 재질", `${r.kind} · ${r.material}`],
         ["지정 처리업체", r.facility],
         [
@@ -642,7 +660,7 @@
     }
     return (
       top(esc(r.id), backBtn) +
-      `<div class="stack">${head}${info}${r.status !== "settled" ? aiCheck(r) : ""}${circSection(r)}${docsSection(r)}<form id="edit" data-id="${esc(r.id)}" novalidate>${body}</form></div>`
+      `<div class="stack">${head}${info}${r.status !== "settled" ? routeEdit(r) + aiCheck(r) : ""}${circSection(r)}${docsSection(r)}<form id="edit" data-id="${esc(r.id)}" novalidate>${body}</form></div>`
     );
   }
 
@@ -785,7 +803,9 @@
             "혼합",
           ]) +
           field("예상 반출량 (톤)", "weight", "", "number", 'placeholder="예: 4.5"') +
-          field("마대 수 (개)", "bags", "", "number", 'placeholder="예: 10"') +
+          sel("담는 방식", "packaging", M.PACKS) +
+          field("개수 (마대·톤백)", "bags", "", "number", 'placeholder="더미면 비워 둠"') +
+          sel("운반 경로", "routeMode", M.ROUTES) +
           field(
             "출항 예정 일시",
             "departure",
@@ -842,6 +862,7 @@
     set("material", f.material);
     set("weight", f.weight);
     set("bags", f.bags);
+    set("packaging", f.packaging);
     set("departure", f.departure);
     form
       .querySelectorAll("[name=checks]")
@@ -1024,6 +1045,18 @@
         fail(e);
       }
     },
+    async "route-save"() {
+      const box = $("#route-box"),
+        v = (n) => box.querySelector(`[name=${n}]`).value.trim();
+      const body = { status: v("rt-status"), reason: v("rt-reason") || null };
+      if (body.status === "연기") body.delayedTo = v("rt-date");
+      try {
+        replaceItem(await window.GmServer.trade.route(curId(), body));
+        toast(body.status === "연기" ? "출항일 연기 기록 완료" : "운항 상태 저장 완료");
+      } catch (e) {
+        toast(e.message);
+      }
+    },
     async "doc-open"(el) {
       try {
         await window.GmServer.trade.openDoc(curId(), el.dataset.key);
@@ -1078,7 +1111,9 @@
           id: M.allocateId(items),
           kind: d.get("kind"),
           material: d.get("material"),
-          bags: Number(d.get("bags")),
+          bags: Number(d.get("bags") || 0),
+          packaging: d.get("packaging"),
+          route: M.routeFor(d.get("routeMode")),
           weight,
           departure,
           note: d.get("note").trim(),

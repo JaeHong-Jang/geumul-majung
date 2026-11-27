@@ -216,7 +216,9 @@
         min: 0.001,
         step: "0.001",
       }),
-      numericField("마대 수 (개)", "bags", "", { min: 1 }),
+      field("담는 방식", "packaging", "더미", { options: model().PACKS }),
+      numericField("개수 (마대·톤백, 더미면 0)", "bags", 0, { min: 0 }),
+      field("운반 경로", "routeMode", "시 용역 바지선", { options: model().ROUTES }),
       field("출항 예정 일시", "departure", model().DEMO_DATE + "T13:00", {
         type: "datetime-local",
       }),
@@ -250,7 +252,9 @@
           id: model().allocateId(app().records()),
           kind: data.get("kind"),
           material: data.get("material"),
-          bags: Number(data.get("bags")),
+          bags: Number(data.get("bags") || 0),
+          packaging: data.get("packaging"),
+          route: model().routeFor(data.get("routeMode")),
           weight: estimated,
           departure,
           note: data.get("note").trim(),
@@ -333,7 +337,14 @@
     return (
       description([
         ["반출 예정", window.NetUI.when(record.departure)],
-        ["예상 반출량", `${weight(record.weight)} · ${record.bags}마대`],
+        ["예상 반출량", `${weight(record.weight)} · ${model().packLabel(record)}`],
+        ...(record.route
+          ? [
+              ["운반", `${record.route.mode}${record.route.vessel ? " · " + record.route.vessel : ""}${record.route.landingPort ? " → " + record.route.landingPort : ""}`],
+              ["운항 상태", `${record.route.status || "예정"}${record.route.reason ? " · " + record.route.reason : ""}`],
+              ["적용 계약", record.route.contract || "미확인"],
+            ]
+          : []),
         ["어구 · 재질", `${record.kind} · ${record.material}`],
         ["지정 처리업체", record.facility],
         [

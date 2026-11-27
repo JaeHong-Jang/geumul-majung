@@ -47,7 +47,7 @@
 
   const list = () => call("operator", "GET", "/shipments");
   const path = (id) => "/shipments/" + encodeURIComponent(id);
-  const FIELDS = ["kind", "material", "weight", "bags", "departure", "note", "checks", "photo",
+  const FIELDS = ["kind", "material", "weight", "bags", "packaging", "route", "departure", "note", "checks", "photo",
     "facility", "baseRate", "feeRate", "directCost"];
 
   async function start() {
@@ -117,6 +117,8 @@
     market: () => call("recycler", "GET", "/market"),
     reply: (id, idx, body) => call("recycler", "POST", path(id) + "/quotes/" + idx + "/reply", body),
     docs: (id) => call("operator", "GET", path(id) + "/documents", undefined, 20000),
+    // 운항 상태(예정·결항·연기·완료). 연기는 새 출항일, 견적 유효일을 넘으면 서버가 재협의로 되돌림
+    route: (id, body) => call("operator", "POST", path(id) + "/route", body),
     // 인쇄용 초안 HTML은 인증이 필요해 글로 받아 새 창에 띄운다
     async openDoc(id, key) {
       const win = window.open("", "_blank");

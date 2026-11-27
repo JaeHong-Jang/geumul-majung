@@ -16,9 +16,9 @@ from app.features.gm import circulation, rules
 router = APIRouter(prefix="/v1/gm", tags=["gm"])
 
 ROLE_NAME = {"factory": "집하장", "operator": "운영", "recycler": "처리업체"}
-CAN = {"create": {"factory", "operator"}, "quotes": {"operator"}, "confirm": {"operator"},
+CAN = {"route": {"factory", "operator"}, "create": {"factory", "operator"}, "quotes": {"operator"}, "confirm": {"operator"},
        "settle": {"recycler", "operator"}, "reset": {"operator"}}
-NEW_FIELDS = ("kind", "material", "weight", "bags", "departure", "note", "checks", "photo", "facility",
+NEW_FIELDS = ("kind", "material", "weight", "bags", "packaging", "route", "departure", "note", "checks", "photo", "facility",
               "baseRate", "feeRate", "directCost")
 DEFAULT_RATES = {"facility": "보령 지정 재활용업체 (가상)", "baseRate": 300000, "feeRate": 40000, "directCost": 110000}
 
@@ -139,6 +139,33 @@ def _actual(body: dict) -> dict:
     if body.get("extra") is not None:
         a["extra"] = body["extra"]
     return a
+
+
+@router.post("/shipments/{sid}/route")
+def set_route(sid: str, body: dict = Body(...), me: Company = Depends(current_company), session: Session = Depends(get_session)):
+    """운반 정보와 운항 상태(예정·결항·연기·완료). 연기는 새 출항일로 옮기고, 확정한 견적의 유효일을 넘으면 다시 협의로 되돌린다."""
+    _allow(me, "route")
+    row = _get(session, sid)
+    if row.status == "settled":
+        raise HTTPException(409, "정산이 끝난 반출은 운반 정보를 바꿀 수 없음")
+    r = copy.deepcopy(row.data)
+    route = {**(r.get("route") or {"mode": "미정"}), **{k: body[k] for k in ("mode", "vessel", "landingPort", "contract", "status", "reason")
+                                                        if body.get(k) is not None}}
+    action = f"운반 {route.get('status') or '수정'}"
+    if route.get("status") == "연기":
+        try:
+            new_day = rules.calendar_day(str(body.get("delayedTo") or ""), "연기한 출항일")
+        except rules.RuleError as e:
+            raise HTTPException(400, str(e))
+        if new_day <= r["departure"][:10]:
+            raise HTTPException(400, "연기한 출항일은 지금 출항일보다 뒤여야 함")
+        r["departure"] = new_day + r["departure"][10:]
+        route["delayedFrom"] = row.data["departure"]
+        if r.get("choice") is not None and r["quotes"][r["choice"]]["validUntil"] < new_day:
+            r["status"], r["choice"] = "registered", None       # 견적이 출항 전에 끝남 → 업체와 다시 협의
+            action += ", 견적 유효일 지나 재협의"
+    r["route"] = route
+    return _save(session, row, r, me, action, body.get("version"))
 
 
 @router.post("/shipments/{sid}/preview")

@@ -296,9 +296,9 @@
       esc(r.kind) +
       '</h3><p class="card-meta">' +
       esc(r.material) +
-      " · 마대 " +
-      r.bags +
-      "개 · " +
+      " · " +
+      esc(model.packLabel(r)) +
+      " · " +
       d.short +
       " (" +
       d.day +

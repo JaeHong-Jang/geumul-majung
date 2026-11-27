@@ -10,6 +10,18 @@
     "재질 표본 사진 확보",
   ];
 
+  // 담는 방식. 삽시도 집하장은 포장 없는 더미가 기본(충남연구원 사진 판독, 05_리서치 수거 구조 확인)
+  const PACKS = ["더미", "마대", "톤백", "암롤박스"];
+  // 운반 경로. 보령 섬 물량은 시 용역 바지선 또는 도 운반선(늘푸른충남호)으로 나간다
+  const ROUTES = ["시 용역 바지선", "도 운반선", "육상 차량", "미정"];
+  const ROUTE_STATUS = ["예정", "결항", "연기", "완료"];
+  const UNIT = { 마대: "마대", 톤백: "톤백", 암롤박스: "암롤" };
+  // 화면 표시: "더미" 또는 "12마대"
+  function packLabel(record) {
+    const p = record.packaging || "마대";
+    return p === "더미" ? "더미" : record.bags + UNIT[p];
+  }
+
   // 1톤 초과 반입은 출항 24시간 전 업체 신청 (Fisheries Iceland 규칙 차용)
   function noticeBy(departure) {
     return new Date(Date.parse(departure + ":00Z") - 864e5)
@@ -131,8 +143,25 @@
       facility: "처리업체",
     }))
       requireText(record[key], title);
-    if (!Number.isSafeInteger(record.bags) || record.bags < 1) {
-      throw new Error("마대 수: 1 이상의 정수 입력 필요");
+    const pack = record.packaging ?? "마대"; // 예전 기록은 마대
+    if (!PACKS.includes(pack)) throw new Error("담는 방식 확인 필요");
+    const minBags = pack === "더미" ? 0 : 1;
+    if (!Number.isSafeInteger(record.bags) || record.bags < minBags) {
+      throw new Error(
+        pack === "더미"
+          ? "개수: 0 이상의 정수 입력 필요"
+          : "개수: " + pack + "이면 1 이상의 정수 입력 필요",
+      );
+    }
+    const route = record.route;
+    if (route != null) {
+      if (typeof route !== "object" || !ROUTES.includes(route.mode))
+        throw new Error("운반 경로 확인 필요");
+      if (route.status != null && !ROUTE_STATUS.includes(route.status))
+        throw new Error("운항 상태 확인 필요");
+      for (const k of ["vessel", "landingPort", "contract", "reason"])
+        if (route[k] != null && typeof route[k] !== "string")
+          throw new Error("운반 정보 확인 필요");
     }
     positiveWeight(record.weight, "예상 중량");
     if (
@@ -234,6 +263,21 @@
     return prefix + String(sequence + 1).padStart(3, "0");
   }
 
+  // 운반 경로별 기본 정보. 2026 보령 도서지역 정화사업은 계약 업체가 예선·대선으로 대천항까지 옮기고 낙찰 업체 처리장에서 처리한다
+  function routeFor(mode) {
+    if (mode === "도 운반선")
+      return { mode, vessel: "늘푸른충남호(충남도 직영)", landingPort: "대천항(추정)",
+        contract: "미확인(하역 뒤 처리 계약 확인 필요)", status: "예정" };
+    if (mode === "시 용역 바지선")
+      return { mode, vessel: "예선, 대선(계약 업체)", landingPort: "대천항",
+        contract: "2026 보령 도서지역 해양쓰레기 정화사업(공동도급)", status: "예정" };
+    return { mode, vessel: "", landingPort: "", contract: "", status: "예정" };
+  }
+  function routeOf(lot) {
+    const r = routeFor(lot.id === "SS-2611-004" ? "도 운반선" : "시 용역 바지선");
+    return lot.status === "settled" ? { ...r, status: "완료" } : r;
+  }
+
   function seed() {
     const lots = [
       {
@@ -242,6 +286,7 @@
         material: "나일론",
         weight: 5,
         bags: 12,
+        packaging: "마대",
         departure: "2026-11-27T08:30",
         status: "confirmed",
         note: "로프 분리 후 그물을 마대별로 결속해 인계함",
@@ -252,7 +297,8 @@
         kind: "폐통발 그물",
         material: "혼합",
         weight: 3.2,
-        bags: 8,
+        bags: 0,
+        packaging: "더미",
         departure: "2026-11-30T09:00",
         status: "registered",
         note: "부착 로프 혼입으로 육상 선별 조건 확인 중",
@@ -263,6 +309,7 @@
         material: "나일론",
         weight: 4.5,
         bags: 10,
+        packaging: "마대",
         departure: "2026-12-01T08:30",
         status: "confirmed",
         note: "마대별 표본 그물 별도 표시",
@@ -272,7 +319,8 @@
         kind: "혼합 폐어망",
         material: "미확인",
         weight: 2.4,
-        bags: 6,
+        bags: 0,
+        packaging: "더미",
         departure: "2026-12-02T10:00",
         status: "registered",
         note: "재질 표본 확인 필요",
@@ -283,6 +331,7 @@
         material: "나일론",
         weight: 5,
         bags: 11,
+        packaging: "마대",
         departure: "2026-11-24T08:50",
         status: "settled",
         note: "지정 업체 검수 완료",
@@ -299,7 +348,8 @@
         kind: "폐통발 그물",
         material: "혼합",
         weight: 3,
-        bags: 7,
+        bags: 0,
+        packaging: "더미",
         departure: "2026-11-20T09:10",
         status: "settled",
         note: "잔재물 별도 처리 완료",
@@ -321,6 +371,7 @@
         feeRate: 40000,
         directCost: 110000,
         choice: lot.status === "registered" ? null : 1,
+        route: routeOf(lot),
         quotes: defaults(lot.weight, lot.departure),
         ...lot,
       }),
@@ -330,6 +381,11 @@
   const model = Object.freeze({
     DEMO_DATE,
     CHECKS,
+    PACKS,
+    ROUTES,
+    ROUTE_STATUS,
+    packLabel,
+    routeFor,
     noticeBy,
     seed,
     defaults,
