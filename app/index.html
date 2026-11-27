@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#e9f4f8" />
+    <title>그물마중 · 앱</title>
+    <link rel="stylesheet" href="app.css" />
+    <script defer src="../model.js"></script>
+    <script defer src="app.js"></script>
+  </head>
+  <body>
+    <div class="phone">
+      <main id="screen" tabindex="-1"></main>
+      <nav class="tabbar" aria-label="주 메뉴">
+        <a href="#/home" data-tab="home"><i>▦</i>운영 현황</a>
+        <a href="#/list" data-tab="list"><i>▣</i>반출 목록</a>
+        <a href="#/settle" data-tab="settle"><i>▤</i>정산 내역</a>
+      </nav>
+    </div>
+    <dialog id="guide">
+      <h2>그물마중 시연 안내</h2>
+      <p>
+        선적 전 지정 업체와 인수 조건을 합의하고, 육상 검수 완료 후 비용을
+        정산하는 절차임.
+      </p>
+      <ol>
+        <li>새 반출 등록에서 집하 정보·사전 점검 입력</li>
+        <li>동일 업체의 처리 조건 2안 비교 후 1안 확정</li>
+        <li>
+          실제 인수량·증빙·업체 확인자 입력 후 고객 절감액과 팀 공헌이익 확인
+        </li>
+      </ol>
+      <p class="muted">
+        모든 일정·금액은 가상값임. 기록은 현재 브라우저에 저장됨. 시연 기준일
+        2026. 11. 27.<br />
+        대천항 사진 · Yu Nam-hae, 2013 · 공공누리 제1유형
+      </p>
+      <form method="dialog" class="row-btns">
+        <button type="button" class="btn ghost" data-act="reset">
+          시연 데이터 초기화
+        </button>
+        <button class="btn">닫기</button>
+      </form>
+    </dialog>
+    <div id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
